@@ -25,163 +25,55 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-            background: #000;
+            background: #0a0a0f;
             color: white;
             user-select: none;
         }
 
-        /* ===== Fullscreen Video Stage ===== */
-        .video-stage {
-            position: fixed;
-            inset: 0;
-            background: #000;
-            overflow: hidden;
-        }
-
-        /* Stranger's video - fullscreen */
-        #remoteVideo {
-            position: absolute;
-            inset: 0;
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            background: #111;
-        }
-
-        /* Placeholder when no video */
-        .video-placeholder {
-            position: absolute;
-            inset: 0;
+        /* ===== Main App Container (vertical flex) ===== */
+        .app {
             display: flex;
             flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
-            gap: 20px;
-            z-index: 1;
-        }
-
-        .video-placeholder.hidden {
-            display: none;
-        }
-
-        .video-placeholder .avatar {
-            width: 120px;
-            height: 120px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 60px;
-            animation: pulse 2s ease-in-out infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); opacity: 1; }
-            50% { transform: scale(1.05); opacity: 0.9; }
-        }
-
-        .video-placeholder .placeholder-text {
-            font-size: 16px;
-            color: rgba(255,255,255,0.7);
-            text-align: center;
-            padding: 0 20px;
-            max-width: 300px;
-        }
-
-        /* Self video - floating PiP */
-        .self-video-wrapper {
-            position: absolute;
-            top: 80px;
-            right: 12px;
-            width: 110px;
-            height: 160px;
-            border-radius: 14px;
+            height: 100vh;
+            height: 100dvh; /* Mobile dynamic viewport */
             overflow: hidden;
-            background: #000;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.6);
-            border: 2px solid rgba(255,255,255,0.15);
-            z-index: 20;
-            transition: transform 0.2s;
-            cursor: grab;
-        }
-
-        .self-video-wrapper:active {
-            cursor: grabbing;
-        }
-
-        .self-video-wrapper.dragging {
-            transition: none;
-            box-shadow: 0 8px 30px rgba(102,126,234,0.6);
-            border-color: rgba(102,126,234,0.8);
-        }
-
-        #localVideo {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transform: scaleX(-1); /* Mirror self view */
-        }
-
-        .self-label {
-            position: absolute;
-            bottom: 4px;
-            left: 4px;
-            background: rgba(0,0,0,0.6);
-            color: white;
-            padding: 2px 6px;
-            border-radius: 8px;
-            font-size: 9px;
-            font-weight: 600;
-            backdrop-filter: blur(5px);
-        }
-
-        /* Self video hidden state */
-        .self-video-wrapper.hidden {
-            display: none;
         }
 
         /* ===== Top Status Bar ===== */
         .top-bar {
-            position: absolute;
-            top: 12px;
-            left: 12px;
-            right: 12px;
+            padding: 10px 12px;
+            padding-top: calc(10px + env(safe-area-inset-top));
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            z-index: 30;
-            gap: 10px;
-            pointer-events: none;
+            justify-content: center;
+            flex-shrink: 0;
+            background: #0a0a0f;
+            z-index: 10;
         }
 
         .status-pill {
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            background: rgba(0,0,0,0.65);
+            background: rgba(255,255,255,0.08);
             color: white;
-            padding: 8px 14px;
+            padding: 6px 14px;
             border-radius: 50px;
             font-size: 12px;
             font-weight: 500;
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            max-width: 70%;
+            max-width: 90%;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
-            pointer-events: auto;
             transition: background 0.3s;
         }
 
         .status-pill.error {
-            background: rgba(220,38,38,0.9);
+            background: rgba(220,38,38,0.75);
         }
 
         .status-pill.success {
-            background: rgba(16,185,129,0.85);
+            background: rgba(16,185,129,0.75);
         }
 
         .status-dot {
@@ -207,112 +99,167 @@
             50% { opacity: 0.3; }
         }
 
-        /* ===== Chat Overlay ===== */
-        .chat-overlay {
+        /* ===== Video Area (top, flexible) ===== */
+        .video-area {
+            flex: 1;
+            position: relative;
+            background: #000;
+            overflow: hidden;
+            min-height: 0;
+        }
+
+        /* Stranger video - fills the video area */
+        #remoteVideo {
             position: absolute;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            max-height: 70%;
-            background: rgba(0,0,0,0.92);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border-top-left-radius: 20px;
-            border-top-right-radius: 20px;
-            transform: translateY(100%);
-            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            z-index: 50;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            background: #111;
+        }
+
+        /* Placeholder */
+        .video-placeholder {
+            position: absolute;
+            inset: 0;
             display: flex;
             flex-direction: column;
-            overflow: hidden;
-        }
-
-        .chat-overlay.open {
-            transform: translateY(0);
-        }
-
-        .chat-handle {
-            width: 40px;
-            height: 4px;
-            background: rgba(255,255,255,0.3);
-            border-radius: 2px;
-            margin: 8px auto;
-            flex-shrink: 0;
-        }
-
-        .chat-header {
-            padding: 8px 20px 12px;
-            display: flex;
             align-items: center;
-            justify-content: space-between;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-            flex-shrink: 0;
+            justify-content: center;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            gap: 16px;
+            z-index: 2;
         }
 
-        .chat-header-title {
-            font-size: 14px;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 8px;
+        .video-placeholder.hidden {
+            display: none;
         }
 
-        .chat-header-title .online-dot {
-            width: 8px;
-            height: 8px;
+        .video-placeholder .avatar {
+            width: 100px;
+            height: 100px;
             border-radius: 50%;
-            background: #6b7280;
-            transition: background 0.3s;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            animation: pulse 2s ease-in-out infinite;
         }
 
-        .chat-header-title .online-dot.online {
-            background: #10b981;
-            box-shadow: 0 0 8px #10b981;
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.05); opacity: 0.9; }
         }
 
-        .chat-close {
-            background: transparent;
-            border: none;
-            color: rgba(255,255,255,0.6);
-            font-size: 22px;
-            cursor: pointer;
-            padding: 4px 8px;
+        .video-placeholder .placeholder-text {
+            font-size: 15px;
+            color: rgba(255,255,255,0.7);
+            text-align: center;
+            padding: 0 20px;
+            max-width: 300px;
+        }
+
+        /* Self video PiP */
+        .self-video-wrapper {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            width: 100px;
+            height: 145px;
+            border-radius: 12px;
+            overflow: hidden;
+            background: #000;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.6);
+            border: 2px solid rgba(255,255,255,0.15);
+            z-index: 5;
+            cursor: grab;
+            transition: transform 0.15s;
+            touch-action: none;
+        }
+
+        .self-video-wrapper:active {
+            cursor: grabbing;
+        }
+
+        .self-video-wrapper.dragging {
+            transition: none;
+            box-shadow: 0 8px 30px rgba(102,126,234,0.6);
+            border-color: rgba(102,126,234,0.8);
+            transform: scale(1.05);
+        }
+
+        .self-video-wrapper.hidden {
+            display: none;
+        }
+
+        #localVideo {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transform: scaleX(-1);
+        }
+
+        .self-label {
+            position: absolute;
+            bottom: 4px;
+            left: 4px;
+            background: rgba(0,0,0,0.6);
+            color: white;
+            padding: 2px 6px;
             border-radius: 8px;
-            line-height: 1;
+            font-size: 9px;
+            font-weight: 600;
+            backdrop-filter: blur(5px);
         }
 
-        .chat-close:active {
-            background: rgba(255,255,255,0.1);
+        /* ===== Chat Area (bottom of video, flexible) ===== */
+        .chat-area {
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            background: #12121a;
+            border-top: 1px solid rgba(255,255,255,0.08);
+            max-height: 35vh;
+            min-height: 140px;
+            transition: max-height 0.3s ease;
+        }
+
+        .chat-area.collapsed {
+            max-height: 0;
+            min-height: 0;
+            overflow: hidden;
+            border-top: none;
         }
 
         .chat-messages {
             flex: 1;
             overflow-y: auto;
-            padding: 12px 16px;
+            padding: 10px 14px;
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 6px;
             -webkit-overflow-scrolling: touch;
         }
 
         .chat-messages::-webkit-scrollbar { width: 4px; }
         .chat-messages::-webkit-scrollbar-thumb {
-            background: rgba(255,255,255,0.2);
+            background: rgba(255,255,255,0.15);
             border-radius: 2px;
         }
 
         .message {
-            max-width: 80%;
-            padding: 8px 12px;
+            max-width: 82%;
+            padding: 7px 12px;
             border-radius: 14px;
-            font-size: 14px;
+            font-size: 13px;
             line-height: 1.4;
             word-wrap: break-word;
             animation: msgIn 0.2s ease;
         }
 
         @keyframes msgIn {
-            from { opacity: 0; transform: translateY(8px); }
+            from { opacity: 0; transform: translateY(6px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
@@ -325,27 +272,27 @@
 
         .message.them {
             align-self: flex-start;
-            background: rgba(255,255,255,0.15);
+            background: rgba(255,255,255,0.1);
             color: white;
             border-bottom-left-radius: 4px;
         }
 
         .message.system {
             align-self: center;
-            background: rgba(255,255,255,0.08);
+            background: rgba(255,255,255,0.05);
             color: #9ca3af;
             font-size: 11px;
             font-style: italic;
-            padding: 4px 12px;
+            padding: 3px 12px;
             border-radius: 20px;
             text-align: center;
         }
 
         .typing-indicator {
             align-self: flex-start;
-            background: rgba(255,255,255,0.15);
+            background: rgba(255,255,255,0.1);
             color: rgba(255,255,255,0.7);
-            padding: 10px 14px;
+            padding: 8px 14px;
             border-radius: 14px;
             border-bottom-left-radius: 4px;
             font-size: 12px;
@@ -358,8 +305,8 @@
 
         .typing-dots span {
             display: inline-block;
-            width: 6px;
-            height: 6px;
+            width: 5px;
+            height: 5px;
             border-radius: 50%;
             background: rgba(255,255,255,0.7);
             animation: typing 1.4s infinite;
@@ -376,22 +323,22 @@
 
         .chat-input-row {
             display: flex;
-            padding: 10px 12px;
+            padding: 8px 12px;
+            padding-bottom: calc(8px + env(safe-area-inset-bottom));
             gap: 8px;
-            background: rgba(255,255,255,0.05);
-            border-top: 1px solid rgba(255,255,255,0.1);
+            background: rgba(255,255,255,0.03);
+            border-top: 1px solid rgba(255,255,255,0.08);
             flex-shrink: 0;
-            padding-bottom: calc(10px + env(safe-area-inset-bottom));
         }
 
         .chat-input-row input {
             flex: 1;
-            padding: 12px 16px;
-            border-radius: 24px;
-            border: 1px solid rgba(255,255,255,0.15);
-            background: rgba(255,255,255,0.1);
+            padding: 11px 16px;
+            border-radius: 22px;
+            border: 1px solid rgba(255,255,255,0.12);
+            background: rgba(255,255,255,0.08);
             color: white;
-            font-size: 15px;
+            font-size: 14px;
             outline: none;
             font-family: inherit;
             min-width: 0;
@@ -399,7 +346,7 @@
 
         .chat-input-row input:focus {
             border-color: #667eea;
-            background: rgba(255,255,255,0.15);
+            background: rgba(255,255,255,0.12);
         }
 
         .chat-input-row input::placeholder {
@@ -412,13 +359,13 @@
         }
 
         .chat-send-btn {
-            width: 44px;
-            height: 44px;
+            width: 42px;
+            height: 42px;
             border-radius: 50%;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             border: none;
-            font-size: 20px;
+            font-size: 18px;
             cursor: pointer;
             display: flex;
             align-items: center;
@@ -438,34 +385,25 @@
 
         /* ===== Bottom Controls ===== */
         .bottom-controls {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            padding: 16px 16px calc(16px + env(safe-area-inset-bottom));
-            background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.7) 60%, transparent 100%);
+            flex-shrink: 0;
+            padding: 10px 12px;
+            padding-bottom: calc(10px + env(safe-area-inset-bottom));
+            background: #0a0a0f;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 12px;
-            z-index: 25;
-            pointer-events: none;
-        }
-
-        .bottom-controls > * {
-            pointer-events: auto;
+            gap: 10px;
+            border-top: 1px solid rgba(255,255,255,0.06);
         }
 
         .circle-btn {
-            width: 52px;
-            height: 52px;
+            width: 48px;
+            height: 48px;
             border-radius: 50%;
-            background: rgba(255,255,255,0.15);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255,255,255,0.2);
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.12);
             color: white;
-            font-size: 22px;
+            font-size: 20px;
             cursor: pointer;
             display: flex;
             align-items: center;
@@ -477,34 +415,34 @@
 
         .circle-btn:active {
             transform: scale(0.92);
-            background: rgba(255,255,255,0.25);
+            background: rgba(255,255,255,0.18);
         }
 
         .circle-btn.off {
-            background: rgba(220,38,38,0.85);
+            background: rgba(220,38,38,0.7);
             border-color: rgba(220,38,38,0.5);
         }
 
         .circle-btn.primary {
-            width: 68px;
-            height: 68px;
+            width: 60px;
+            height: 60px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             border: none;
-            font-size: 26px;
-            box-shadow: 0 4px 20px rgba(102,126,234,0.5);
+            font-size: 24px;
+            box-shadow: 0 4px 16px rgba(102,126,234,0.4);
         }
 
         .circle-btn.primary:active {
-            box-shadow: 0 2px 10px rgba(102,126,234,0.7);
+            box-shadow: 0 2px 8px rgba(102,126,234,0.6);
         }
 
         .circle-btn.danger {
-            background: rgba(220,38,38,0.9);
+            background: rgba(220,38,38,0.8);
             border: none;
         }
 
         .circle-btn:disabled {
-            opacity: 0.4;
+            opacity: 0.35;
             cursor: not-allowed;
         }
 
@@ -512,23 +450,22 @@
             transform: none;
         }
 
-        /* Notification badge on chat button */
         .badge {
             position: absolute;
             top: -4px;
             right: -4px;
-            min-width: 20px;
-            height: 20px;
-            border-radius: 10px;
+            min-width: 18px;
+            height: 18px;
+            border-radius: 9px;
             background: #ef4444;
             color: white;
-            font-size: 11px;
+            font-size: 10px;
             font-weight: 700;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 0 5px;
-            border: 2px solid #000;
+            padding: 0 4px;
+            border: 2px solid #0a0a0f;
             opacity: 0;
             transform: scale(0);
             transition: all 0.2s;
@@ -558,7 +495,7 @@
         .modal-content {
             background: white;
             color: #333;
-            padding: 32px 24px;
+            padding: 30px 24px;
             border-radius: 24px;
             text-align: center;
             max-width: 400px;
@@ -577,7 +514,7 @@
         }
 
         .modal-content > p {
-            margin-bottom: 20px;
+            margin-bottom: 16px;
             color: #666;
             line-height: 1.5;
             font-size: 14px;
@@ -585,24 +522,24 @@
 
         .feature-list {
             text-align: left;
-            margin: 20px 0;
-            padding-left: 20px;
+            margin: 16px 0;
+            padding-left: 0;
             list-style: none;
         }
 
         .feature-list li {
-            margin: 10px 0;
+            margin: 8px 0;
             color: #555;
-            font-size: 14px;
+            font-size: 13px;
         }
 
         .btn-modal {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            padding: 14px 32px;
+            padding: 14px 28px;
             border-radius: 50px;
             border: none;
-            font-size: 16px;
+            font-size: 15px;
             font-weight: 600;
             cursor: pointer;
             font-family: inherit;
@@ -617,12 +554,12 @@
         /* ===== Toast ===== */
         .toast {
             position: fixed;
-            bottom: 140px;
+            bottom: 120px;
             left: 50%;
             transform: translateX(-50%);
             background: rgba(0,0,0,0.85);
             color: white;
-            padding: 10px 20px;
+            padding: 10px 18px;
             border-radius: 12px;
             font-size: 13px;
             z-index: 3000;
@@ -637,122 +574,135 @@
             to { opacity: 1; transform: translateX(-50%) translateY(0); }
         }
 
-        /* ===== Tablet & Desktop Adjustments ===== */
-        @media (min-width: 768px) {
+        /* ===== Larger screens: two-column layout ===== */
+        @media (min-width: 900px) {
+            .app {
+                max-width: 1400px;
+                margin: 0 auto;
+                flex-direction: row;
+            }
+
+            .video-area {
+                flex: 2;
+                border-right: 1px solid rgba(255,255,255,0.08);
+            }
+
             .self-video-wrapper {
-                width: 160px;
-                height: 220px;
-                top: 100px;
+                width: 140px;
+                height: 200px;
+                top: 20px;
                 right: 20px;
             }
 
-            .chat-overlay {
-                max-height: 60%;
-                left: auto;
-                right: 20px;
-                bottom: 120px;
-                width: 380px;
-                border-radius: 20px;
-                transform: translateY(20px);
-                opacity: 0;
-                pointer-events: none;
+            .right-column {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                background: #12121a;
+                max-width: 420px;
+                min-width: 320px;
             }
 
-            .chat-overlay.open {
-                transform: translateY(0);
-                opacity: 1;
-                pointer-events: auto;
+            .top-bar {
+                padding: 16px;
             }
 
-            .chat-overlay::before {
-                display: none;
+            .chat-area {
+                flex: 1;
+                max-height: none;
+                min-height: 0;
+            }
+
+            .bottom-controls {
+                padding: 16px;
             }
         }
 
-        /* Very small phones */
+        /* Small phones */
         @media (max-width: 360px) {
             .self-video-wrapper {
-                width: 90px;
-                height: 130px;
+                width: 85px;
+                height: 125px;
             }
 
             .circle-btn {
-                width: 46px;
-                height: 46px;
-                font-size: 20px;
+                width: 42px;
+                height: 42px;
+                font-size: 18px;
             }
 
             .circle-btn.primary {
-                width: 60px;
-                height: 60px;
-                font-size: 24px;
+                width: 54px;
+                height: 54px;
+                font-size: 22px;
+            }
+        }
+
+        /* Landscape phone */
+        @media (orientation: landscape) and (max-height: 500px) {
+            .chat-area {
+                max-height: 45vh;
             }
 
-            .status-pill {
-                font-size: 11px;
-                padding: 6px 10px;
+            .self-video-wrapper {
+                width: 90px;
+                height: 130px;
             }
         }
     </style>
 </head>
 <body>
-    <!-- Video Stage -->
-    <div class="video-stage">
-        <!-- Stranger's fullscreen video -->
-        <video id="remoteVideo" autoplay playsinline></video>
+    <div class="app">
+        <!-- Video Area -->
+        <div class="video-area">
+            <video id="remoteVideo" autoplay playsinline></video>
 
-        <!-- Placeholder shown before connection -->
-        <div class="video-placeholder" id="videoPlaceholder">
-            <div class="avatar">👤</div>
-            <div class="placeholder-text" id="placeholderText">Tap "Start" to meet a stranger</div>
-        </div>
-
-        <!-- Self video PiP -->
-        <div class="self-video-wrapper" id="selfVideoWrapper">
-            <video id="localVideo" autoplay muted playsinline></video>
-            <div class="self-label">You</div>
-        </div>
-    </div>
-
-    <!-- Top Status -->
-    <div class="top-bar">
-        <div class="status-pill" id="statusPill">
-            <span class="status-dot" id="statusDot"></span>
-            <span id="statusText">Ready to start</span>
-        </div>
-    </div>
-
-    <!-- Chat Overlay (slides up from bottom) -->
-    <div class="chat-overlay" id="chatOverlay">
-        <div class="chat-handle"></div>
-        <div class="chat-header">
-            <div class="chat-header-title">
-                <span class="online-dot" id="chatOnlineDot"></span>
-                <span>Chat with Stranger</span>
+            <div class="video-placeholder" id="videoPlaceholder">
+                <div class="avatar">👤</div>
+                <div class="placeholder-text" id="placeholderText">Tap 📞 to meet a stranger</div>
             </div>
-            <button class="chat-close" id="chatCloseBtn">✕</button>
-        </div>
-        <div class="chat-messages" id="chatMessages"></div>
-        <div class="typing-indicator" id="typingIndicator">
-            Stranger is typing<span class="typing-dots"><span></span><span></span><span></span></span>
-        </div>
-        <div class="chat-input-row">
-            <input type="text" id="chatInput" placeholder="Type a message..." maxlength="500" autocomplete="off" disabled>
-            <button class="chat-send-btn" id="chatSendBtn" disabled>➤</button>
-        </div>
-    </div>
 
-    <!-- Bottom Controls -->
-    <div class="bottom-controls">
-        <button class="circle-btn" id="toggleMic" title="Toggle Microphone">🎤</button>
-        <button class="circle-btn" id="toggleCam" title="Toggle Camera">📹</button>
-        <button class="circle-btn primary" id="startBtn" title="Start Chatting">📞</button>
-        <button class="circle-btn" id="chatToggleBtn" title="Open Chat">
-            💬
-            <span class="badge" id="chatBadge">0</span>
-        </button>
-        <button class="circle-btn" id="nextBtn" disabled title="Next Stranger">⏭️</button>
-        <button class="circle-btn danger" id="endBtn" disabled title="End Chat">✕</button>
+            <div class="self-video-wrapper" id="selfVideoWrapper">
+                <video id="localVideo" autoplay muted playsinline></video>
+                <div class="self-label">You</div>
+            </div>
+        </div>
+
+        <!-- Right column (desktop) / Bottom stack (mobile) -->
+        <div class="right-column">
+            <!-- Top Status -->
+            <div class="top-bar">
+                <div class="status-pill" id="statusPill">
+                    <span class="status-dot" id="statusDot"></span>
+                    <span id="statusText">Ready to start</span>
+                </div>
+            </div>
+
+            <!-- Chat Area -->
+            <div class="chat-area" id="chatArea">
+                <div class="chat-messages" id="chatMessages"></div>
+                <div class="typing-indicator" id="typingIndicator">
+                    Stranger is typing<span class="typing-dots"><span></span><span></span><span></span></span>
+                </div>
+                <div class="chat-input-row">
+                    <input type="text" id="chatInput" placeholder="Type a message..." maxlength="500" autocomplete="off" disabled>
+                    <button class="chat-send-btn" id="chatSendBtn" disabled>➤</button>
+                </div>
+            </div>
+
+            <!-- Bottom Controls -->
+            <div class="bottom-controls">
+                <button class="circle-btn" id="toggleMic" title="Toggle Microphone">🎤</button>
+                <button class="circle-btn" id="toggleCam" title="Toggle Camera">📹</button>
+                <button class="circle-btn primary" id="startBtn" title="Start Chatting">📞</button>
+                <button class="circle-btn" id="chatToggleBtn" title="Toggle Chat">
+                    💬
+                    <span class="badge" id="chatBadge">0</span>
+                </button>
+                <button class="circle-btn" id="nextBtn" disabled title="Next Stranger">⏭️</button>
+                <button class="circle-btn danger" id="endBtn" disabled title="End Chat">✕</button>
+            </div>
+        </div>
     </div>
 
     <!-- Welcome Modal -->
@@ -792,19 +742,18 @@
         const toggleCamBtn = document.getElementById('toggleCam');
         const chatToggleBtn = document.getElementById('chatToggleBtn');
         const chatBadge = document.getElementById('chatBadge');
-        const chatOverlay = document.getElementById('chatOverlay');
-        const chatCloseBtn = document.getElementById('chatCloseBtn');
+
+        const chatArea = document.getElementById('chatArea');
         const chatMessages = document.getElementById('chatMessages');
         const chatInput = document.getElementById('chatInput');
         const chatSendBtn = document.getElementById('chatSendBtn');
-        const chatOnlineDot = document.getElementById('chatOnlineDot');
         const typingIndicator = document.getElementById('typingIndicator');
 
         const welcomeModal = document.getElementById('welcomeModal');
         const requestPermissionBtn = document.getElementById('requestPermissionBtn');
 
         // ===== State =====
-        let socket = io();
+        const socket = io();
         let localStream = null;
         let peerConnection = null;
         let dataChannel = null;
@@ -816,6 +765,7 @@
         let unreadCount = 0;
         let typingTimeout = null;
         let lastTypingSent = 0;
+        let chatManuallyCollapsed = false;
 
         const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
@@ -842,9 +792,8 @@
             statusPill.classList.remove('error', 'success');
             statusDot.classList.remove('connected', 'searching');
 
-            if (type === 'error') {
-                statusPill.classList.add('error');
-            } else if (type === 'success') {
+            if (type === 'error') statusPill.classList.add('error');
+            else if (type === 'success') {
                 statusPill.classList.add('success');
                 statusDot.classList.add('connected');
             } else if (type === 'searching') {
@@ -869,8 +818,8 @@
             chatMessages.appendChild(div);
             chatMessages.scrollTop = chatMessages.scrollHeight;
 
-            // Increment unread if chat is closed and message is from stranger
-            if (type === 'them' && !chatOverlay.classList.contains('open')) {
+            // Unread badge when chat is collapsed
+            if (type === 'them' && chatArea.classList.contains('collapsed')) {
                 unreadCount++;
                 updateBadge();
             }
@@ -889,23 +838,20 @@
             }
         }
 
-        function openChat() {
-            chatOverlay.classList.add('open');
-            unreadCount = 0;
-            updateBadge();
-            if (dataChannel && dataChannel.readyState === 'open') {
-                setTimeout(() => chatInput.focus(), 300);
+        function toggleChat() {
+            chatArea.classList.toggle('collapsed');
+            if (!chatArea.classList.contains('collapsed')) {
+                unreadCount = 0;
+                updateBadge();
+                if (dataChannel && dataChannel.readyState === 'open') {
+                    setTimeout(() => chatInput.focus(), 300);
+                }
             }
-        }
-
-        function closeChat() {
-            chatOverlay.classList.remove('open');
         }
 
         function enableChat(enabled) {
             chatInput.disabled = !enabled;
             chatSendBtn.disabled = !enabled;
-            chatOnlineDot.classList.toggle('online', enabled);
         }
 
         function sendChatMessage() {
@@ -955,10 +901,6 @@
                         typingTimeout = setTimeout(() => {
                             typingIndicator.classList.remove('active');
                         }, 2000);
-                        // Auto-scroll if chat is open
-                        if (chatOverlay.classList.contains('open')) {
-                            chatMessages.scrollTop = chatMessages.scrollHeight;
-                        }
                     }
                 } catch (e) {
                     console.error('Chat parse error:', e);
@@ -1084,13 +1026,15 @@
             endBtn.disabled = false;
             startBtn.disabled = true;
 
-            // Reset chat
             chatMessages.innerHTML = '';
             unreadCount = 0;
             updateBadge();
             addSystemMessage('🔍 Matched! Say hi...');
             enableChat(false);
-            closeChat();
+
+            // Reset chat visibility
+            chatArea.classList.remove('collapsed');
+            chatManuallyCollapsed = false;
 
             await createPeerConnection(data.initiator);
 
@@ -1145,7 +1089,6 @@
             nextBtn.disabled = true;
             endBtn.disabled = true;
             enableChat(false);
-            closeChat();
             typingIndicator.classList.remove('active');
             showPlaceholder(true, 'Tap 📞 to find a new stranger');
             setStatus('Ready to chat');
@@ -1187,7 +1130,6 @@
             selfVideoWrapper.addEventListener('touchstart', startDrag, { passive: true });
 
             function startDrag(e) {
-                // Ignore clicks on the video itself (they don't do anything anyway)
                 isDragging = true;
                 selfVideoWrapper.classList.add('dragging');
 
@@ -1198,6 +1140,12 @@
                 const rect = selfVideoWrapper.getBoundingClientRect();
                 initialX = rect.left;
                 initialY = rect.top;
+
+                // Detach from video area corner so absolute positioning works
+                selfVideoWrapper.style.position = 'fixed';
+                selfVideoWrapper.style.left = initialX + 'px';
+                selfVideoWrapper.style.top = initialY + 'px';
+                selfVideoWrapper.style.right = 'auto';
 
                 document.addEventListener('mousemove', onDrag);
                 document.addEventListener('touchmove', onDrag, { passive: false });
@@ -1216,15 +1164,13 @@
                 let newX = initialX + dx;
                 let newY = initialY + dy;
 
-                // Keep inside viewport
                 const w = selfVideoWrapper.offsetWidth;
                 const h = selfVideoWrapper.offsetHeight;
                 newX = Math.max(8, Math.min(window.innerWidth - w - 8, newX));
-                newY = Math.max(60, Math.min(window.innerHeight - h - 8, newY));
+                newY = Math.max(8, Math.min(window.innerHeight - h - 8, newY));
 
                 selfVideoWrapper.style.left = newX + 'px';
                 selfVideoWrapper.style.top = newY + 'px';
-                selfVideoWrapper.style.right = 'auto';
             }
 
             function stopDrag() {
@@ -1244,31 +1190,12 @@
         endBtn.onclick = endCall;
         toggleMicBtn.onclick = toggleMicrophone;
         toggleCamBtn.onclick = toggleCamera;
-        chatToggleBtn.onclick = () => {
-            if (chatOverlay.classList.contains('open')) {
-                closeChat();
-            } else {
-                openChat();
-            }
-        };
-        chatCloseBtn.onclick = closeChat;
+        chatToggleBtn.onclick = toggleChat;
         chatSendBtn.onclick = sendChatMessage;
         chatInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') sendChatMessage();
         });
         chatInput.addEventListener('input', sendTypingIndicator);
-
-        // Close chat when clicking outside (on desktop)
-        document.addEventListener('click', (e) => {
-            if (
-                chatOverlay.classList.contains('open') &&
-                !chatOverlay.contains(e.target) &&
-                e.target !== chatToggleBtn &&
-                !chatToggleBtn.contains(e.target)
-            ) {
-                closeChat();
-            }
-        });
 
         // Cleanup on unload
         window.addEventListener('beforeunload', () => {
@@ -1284,8 +1211,7 @@
             requestPermissionBtn.textContent = '❌ Browser not supported';
         }
 
-        // Initial welcome chat hint
-        addSystemMessage('👋 Welcome! Tap 💬 to open chat when connected.');
+        addSystemMessage('👋 Welcome! Chat will appear here when connected.');
     </script>
 </body>
 </html>
