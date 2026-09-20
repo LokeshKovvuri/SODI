@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="description" content="Random Video Chat - Connect with strangers worldwide">
+    <title>Random Video Chat</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); height: 100vh; overflow: hidden; position: fixed; width: 100%; }
+        .container { height: 100vh; display: flex; flex-direction: column; }
+        .videos-container { flex: 1; display: flex; flex-direction: column; padding: 10px; gap: 10px; }
+        .video-wrapper { flex: 1; background: #000; border-radius: 12px; overflow: hidden; position: relative; box-shadow: 0 5px 20px rgba(0,0,0,0.3); }
+        .video-wrapper video { width: 100%; height: 100%; object-fit: cover; }
+        .video-label { position: absolute; bottom: 10px; left: 10px; background: rgba(0,0,0,0.6); color: white; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 500; backdrop-filter: blur(5px); z-index: 10; }
+        .controls { background: rgba(0,0,0,0.9); padding: 15px; display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; backdrop-filter: blur(10px); border-top: 1px solid rgba(255,255,255,0.1); }
+        button { padding: 12px 20px; font-size: 14px; font-weight: 600; border: none; border-radius: 50px; cursor: pointer; transition: all 0.2s ease; display: inline-flex; align-items: center; gap: 8px; font-family: inherit; touch-action: manipulation; }
+        .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+        .btn-primary:active { transform: scale(0.97); }
+        .btn-danger { background: #dc2626; color: white; }
+        .btn-danger:active { transform: scale(0.97); }
+        .btn-secondary { background: #374151; color: white; }
+        .btn-secondary:active { transform: scale(0.97); }
+        button:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
+        .status { position: fixed; top: 10px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.9); color: white; padding: 10px 20px; border-radius: 50px; font-size: 12px; font-weight: 500; z-index: 1000; text-align: center; white-space: nowrap; max-width: 90%; overflow: hidden; text-overflow: ellipsis; }
+        @media (max-width: 768px) { .status { font-size: 11px; padding: 8px 16px; white-space: normal; max-width: 85%; line-height: 1.4; top: 5px; } }
+        .waiting-animation { display: inline-block; width: 16px; height: 16px; border: 2px solid #fff; border-top-color: transparent; border-radius: 50%; animation: spin 0.8s linear infinite; margin-left: 8px; vertical-align: middle; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.95); display: flex; align-items: center; justify-content: center; z-index: 2000; padding: 20px; }
+        .modal-content { background: white; padding: 30px 25px; border-radius: 20px; text-align: center; max-width: 400px; width: 100%; animation: slideIn 0.3s ease; }
+        @keyframes slideIn { from { transform: translateY(-30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .modal-content h2 { margin-bottom: 15px; color: #333; font-size: 22px; }
+        .modal-content p { margin-bottom: 20px; color: #666; line-height: 1.5; font-size: 14px; }
+        .modal-content .feature-list { text-align: left; margin: 20px 0; padding-left: 20px; }
+        .modal-content .feature-list li { margin: 8px 0; color: #555; font-size: 13px; }
+        .control-buttons { display: flex; gap: 12px; }
+        .icon-btn { background: #374151; padding: 12px; border-radius: 50%; width: 48px; height: 48px; display: inline-flex; align-items: center; justify-content: center; font-size: 22px; touch-action: manipulation; }
+        .icon-btn:active { transform: scale(0.95); }
+        .icon-btn.off { background: #dc2626; }
+        @media (min-width: 768px) {
+            .videos-container { flex-direction: row; padding: 20px; gap: 20px; }
+            .controls { padding: 20px; gap: 20px; }
+            button { padding: 12px 30px; font-size: 16px; }
+            .icon-btn { width: 45px; height: 45px; font-size: 20px; }
+        }
+        @media (max-width: 480px) {
+            .controls { padding: 10px; gap: 8px; }
+            button { padding: 10px 16px; font-size: 13px; }
+            .icon-btn { width: 44px; height: 44px; font-size: 20px; }
+        }
+        @media (orientation: landscape) and (max-height: 500px) {
+            .videos-container { flex-direction: row; padding: 8px; gap: 8px; }
+            .controls { padding: 8px; }
+            button { padding: 8px 16px; font-size: 12px; }
+            .icon-btn { width: 38px; height: 38px; font-size: 18px; }
+        }
+        .toast { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.85); color: white; padding: 8px 16px; border-radius: 8px; font-size: 12px; z-index: 1000; pointer-events: none; backdrop-filter: blur(5px); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="status" id="status">🌍 Connecting to server...</div>
+
+        <div class="videos-container">
+            <div class="video-wrapper">
+                <video id="localVideo" autoplay muted playsinline></video>
+                <div class="video-label">You</div>
+            </div>
+            <div class="video-wrapper">
+                <video id="remoteVideo" autoplay playsinline></video>
+                <div class="video-label">Stranger</div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <div class="control-buttons">
+                <button id="toggleMic" class="icon-btn" title="Toggle Microphone">🎤</button>
+                <button id="toggleCam" class="icon-btn" title="Toggle Camera">📹</button>
+            </div>
+            <button id="startBtn" class="btn-primary" disabled>🎥 Start Chatting</button>
+            <button id="nextBtn" class="btn-secondary" disabled>⏭️ Next</button>
+            <button id="endBtn" class="btn-danger" disabled>❌ End Chat</button>
+        </div>
+    </div>
+
+    <div id="welcomeModal" class="modal">
+        <div class="modal-content">
+            <h2>🎥 Random Video Chat</h2>
+            <p>Connect with strangers from around the world instantly!</p>
+            <ul class="feature-list">
+                <li>✅ 100% Anonymous</li>
+                <li>✅ No data storage</li>
+                <li>✅ Works on mobile & desktop</li>
+                <li>✅ Peer-to-peer encrypted</li>
+                <li>✅ Free forever</li>
+            </ul>
+            <p style="font-size: 13px; color: #888;">Please allow camera and microphone access</p>
+            <button id="requestPermissionBtn" class="btn-primary">🎥 Allow Access & Start</button>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.min.js"></script>
+    <script>
+        const socket = io();
+
+        // DOM Elements
+        const localVideo = document.getElementById('localVideo');
+        const remoteVideo = document.getElementById('remoteVideo');
+        const startBtn = document.getElementById('startBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const endBtn = document.getElementById('endBtn');
+        const toggleMicBtn = document.getElementById('toggleMic');
+        const toggleCamBtn = document.getElementById('toggleCam');
+        const statusDiv = document.getElementById('status');
+        const welcomeModal = document.getElementById('welcomeModal');
+        const requestPermissionBtn = document.getElementById('requestPermissionBtn');
+
+        // State
+        let localStream = null;
+        let peerConnection = null;
+        let currentRoom = null;
+        let isConnected = false;
+        let isSearching = false;
+        let micEnabled = true;
+        let camEnabled = true;
+
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+        const rtcConfig = {
+            iceServers: [
+                { urls: 'stun:stun.l.google.com:19302' },
+                { urls: 'stun:stun1.l.google.com:19302' },
+                { urls: 'stun:stun2.l.google.com:19302' }
+            ],
+            iceCandidatePoolSize: 10
+        };
+
+        function showToast(msg, duration = 2000) {
+            const t = document.createElement('div');
+            t.className = 'toast';
+            t.textContent = msg;
+            document.body.appendChild(t);
+            setTimeout(() => t.remove(), duration);
+        }
+
+        function updateStatus(msg, isError = false) {
+            statusDiv.innerHTML = msg;
+            statusDiv.style.background = isError ? 'rgba(220,38,38,0.95)' : 'rgba(0,0,0,0.95)';
+        }
+
+        // --- Permission handling ---
+        async function requestPermissions() {
+            try {
+                updateStatus('📷 Requesting camera/mic access...');
+                const constraints = {
+                    video: {
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 },
+                        facingMode: isMobile ? 'user' : undefined
+                    },
+                    audio: { echoCancellation: true, noiseSuppression: true }
+                };
+                localStream = await navigator.mediaDevices.getUserMedia(constraints);
+                localVideo.srcObject = localStream;
+                welcomeModal.style.display = 'none';
+                updateStatus('✅ Ready! Tap "Start Chatting"');
+                startBtn.disabled = false;
+                showToast('Camera and mic ready!');
+                return true;
+            } catch (err) {
+                console.error('Permission error:', err);
+                let msg = 'Camera/Mic access required. ';
+                if (err.name === 'NotAllowedError') msg += 'Please allow access in browser settings.';
+                else if (err.name === 'NotFoundError') msg += 'No camera/mic found.';
+                updateStatus(msg, true);
+                showToast(msg, 5000);
+                return false;
+            }
+        }
+
+        // --- Toggles ---
+        function toggleMicrophone() {
+            if (!localStream) return;
+            micEnabled = !micEnabled;
+            localStream.getAudioTracks().forEach(t => t.enabled = micEnabled);
+            toggleMicBtn.classList.toggle('off', !micEnabled);
+            toggleMicBtn.innerHTML = micEnabled ? '🎤' : '🔇';
+            showToast(micEnabled ? 'Mic on' : 'Mic off');
+        }
+
+        function toggleCamera() {
+            if (!localStream) return;
+            camEnabled = !camEnabled;
+            localStream.getVideoTracks().forEach(t => t.enabled = camEnabled);
+            toggleCamBtn.classList.toggle('off', !camEnabled);
+            toggleCamBtn.innerHTML = camEnabled ? '📹' : '🚫';
+            showToast(camEnabled ? 'Camera on' : 'Camera off');
+        }
+
+        // --- WebRTC ---
+        async function createPeerConnection() {
+            if (peerConnection) peerConnection.close();
+
+            peerConnection = new RTCPeerConnection(rtcConfig);
+
+            localStream.getTracks().forEach(track => {
+                peerConnection.addTrack(track, localStream);
+            });
+
+            peerConnection.ontrack = (event) => {
+                if (event.streams && event.streams[0]) {
+                    remoteVideo.srcObject = event.streams[0];
+                    updateStatus('🎥 Connected! You can now chat');
+                    showToast('Connected!');
+                }
+            };
+
+            peerConnection.onicecandidate = (event) => {
+                if (event.candidate && currentRoom) {
+                    socket.emit('signal', { room: currentRoom, signal: event.candidate });
+                }
+            };
+
+            peerConnection.onconnectionstatechange = () => {
+                const st = peerConnection.connectionState;
+                if (st === 'connected') {
+                    isConnected = true;
+                    updateStatus('✅ Connected!');
+                } else if (st === 'disconnected' || st === 'failed') {
+                    updateStatus('❌ Partner disconnected', true);
+                    endCall();
+                }
+            };
+
+            return peerConnection;
+        }
+
+        // --- Socket handlers ---
+        socket.on('connect', () => {
+            console.log('Connected to signaling server');
+            if (!localStream) updateStatus('🌍 Connected. Allow camera access to start');
+        });
+
+        socket.on('waiting', () => {
+            updateStatus('🌍 Waiting for a stranger... <span class="waiting-animation"></span>');
+        });
+
+        socket.on('matched', async (data) => {
+            currentRoom = data.room;
+            isSearching = false;
+            updateStatus('🎉 Match found! Connecting...');
+            nextBtn.disabled = false;
+            endBtn.disabled = false;
+
+            await createPeerConnection();
+
+            if (data.initiator) {
+                const offer = await peerConnection.createOffer();
+                await peerConnection.setLocalDescription(offer);
+                socket.emit('signal', { room: currentRoom, signal: offer });
+            }
+        });
+
+        socket.on('signal', async (data) => {
+            if (!peerConnection) return;
+            const signal = data.signal;
+
+            try {
+                if (signal.type === 'offer') {
+                    await peerConnection.setRemoteDescription(new RTCSessionDescription(signal));
+                    const answer = await peerConnection.createAnswer();
+                    await peerConnection.setLocalDescription(answer);
+                    socket.emit('signal', { room: currentRoom, signal: answer });
+                } else if (signal.type === 'answer') {
+                    await peerConnection.setRemoteDescription(new RTCSessionDescription(signal));
+                } else if (signal.candidate) {
+                    await peerConnection.addIceCandidate(new RTCIceCandidate(signal));
+                }
+            } catch (err) {
+                console.error('Signal error:', err);
+            }
+        });
+
+        socket.on('partner_left', () => {
+            updateStatus('❌ Stranger left. Tap "Next" to find someone new', true);
+            showToast('Stranger left the chat');
+            cleanupAfterPartnerLeft();
+        });
+
+        function cleanupAfterPartnerLeft() {
+            if (peerConnection) { peerConnection.close(); peerConnection = null; }
+            remoteVideo.srcObject = null;
+            isConnected = false;
+            isSearching = false;
+            currentRoom = null;
+            startBtn.disabled = false;
+            nextBtn.disabled = true;
+            endBtn.disabled = true;
+        }
+
+        // --- Main actions ---
+        async function startSearching() {
+            if (isSearching || isConnected) return;
+            if (!localStream) {
+                const ok = await requestPermissions();
+                if (!ok) return;
+            }
+            isSearching = true;
+            startBtn.disabled = true;
+            updateStatus('🔍 Searching... <span class="waiting-animation"></span>');
+            socket.emit('find_partner');
+        }
+
+        function endCall() {
+            if (currentRoom) {
+                socket.emit('leave_room', { room: currentRoom });
+            }
+            cleanupAfterPartnerLeft();
+            updateStatus('Disconnected. Tap "Start Chatting"');
+        }
+
+        function findNext() {
+            endCall();
+            setTimeout(() => startSearching(), 500);
+        }
+
+        // --- Event listeners ---
+        requestPermissionBtn.onclick = requestPermissions;
+        startBtn.onclick = startSearching;
+        nextBtn.onclick = findNext;
+        endBtn.onclick = endCall;
+        toggleMicBtn.onclick = toggleMicrophone;
+        toggleCamBtn.onclick = toggleCamera;
+
+        // Before unload cleanup
+        window.addEventListener('beforeunload', () => {
+            if (localStream) localStream.getTracks().forEach(t => t.stop());
+            if (peerConnection) peerConnection.close();
+            if (currentRoom) socket.emit('leave_room', { room: currentRoom });
+        });
+
+        // Browser support check
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            updateStatus('❌ Browser not supported. Use Chrome, Firefox, Edge, or Safari.', true);
+            requestPermissionBtn.disabled = true;
+        }
+    </script>
+</body>
+</html>
