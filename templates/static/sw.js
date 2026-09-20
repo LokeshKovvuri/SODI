@@ -1,14 +1,9 @@
-const CACHE_NAME = 'randomchat-v1';
-const ASSETS = [
-  '/',
-  '/manifest.json'
-];
+const CACHE_NAME = 'randomchat-v2';
+const ASSETS = ['/', '/manifest.json'];
 
 self.addEventListener('install', (e) => {
   self.skipWaiting();
-  e.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS).catch(() => {}))
-  );
+  e.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS).catch(() => {})));
 });
 
 self.addEventListener('activate', (e) => {
@@ -21,10 +16,8 @@ self.addEventListener('activate', (e) => {
 });
 
 self.addEventListener('fetch', (e) => {
-  // Don't cache socket.io or TURN requests
   const url = e.request.url;
   if (url.includes('socket.io') || url.includes('metered.live')) return;
-
   e.respondWith(
     fetch(e.request).catch(() => caches.match(e.request).then((r) => r || caches.match('/')))
   );

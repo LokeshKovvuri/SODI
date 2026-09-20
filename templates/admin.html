@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0f0f14;
+            color: #e5e7eb;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .container { max-width: 1400px; margin: 0 auto; }
+        h1 { font-size: 24px; margin-bottom: 8px; }
+        .subtitle { color: #9ca3af; font-size: 13px; margin-bottom: 24px; }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .card {
+            background: #1a1a24;
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid rgba(255,255,255,0.06);
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #9ca3af;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .stat-value.green { color: #10b981; }
+        .stat-value.red { color: #ef4444; }
+        .stat-value.yellow { color: #fbbf24; }
+
+        .section {
+            background: #1a1a24;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255,255,255,0.06);
+        }
+
+        .section h2 {
+            font-size: 16px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .refresh-btn {
+            background: #667eea;
+            color: white;
+            padding: 6px 14px;
+            border: none;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        th {
+            text-align: left;
+            padding: 8px 12px;
+            color: #9ca3af;
+            font-size: 11px;
+            text-transform: uppercase;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+
+        td {
+            padding: 10px 12px;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+        }
+
+        tr:hover td { background: rgba(255,255,255,0.02); }
+
+        .badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .badge.nudity { background: #7f1d1d; color: #fca5a5; }
+        .badge.harassment { background: #78350f; color: #fcd34d; }
+        .badge.minor { background: #831843; color: #f9a8d4; }
+        .badge.violence { background: #7f1d1d; color: #fca5a5; }
+        .badge.spam { background: #164e63; color: #67e8f9; }
+        .badge.other { background: #374151; color: #d1d5db; }
+
+        .ban-btn {
+            background: #dc2626;
+            color: white;
+            padding: 5px 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .unban-btn {
+            background: #10b981;
+            color: white;
+            padding: 5px 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .empty {
+            color: #6b7280;
+            font-style: italic;
+            padding: 20px;
+            text-align: center;
+            font-size: 13px;
+        }
+
+        .bars { display: flex; align-items: flex-end; gap: 4px; height: 100px; margin-top: 12px; }
+        .bar {
+            flex: 1;
+            background: linear-gradient(180deg, #667eea, #764ba2);
+            border-radius: 4px 4px 0 0;
+            min-height: 4px;
+            position: relative;
+        }
+        .bar-label {
+            position: absolute;
+            bottom: -22px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 10px;
+            color: #6b7280;
+        }
+
+        .tag-chip {
+            display: inline-block;
+            padding: 4px 10px;
+            margin: 4px 4px 0 0;
+            border-radius: 20px;
+            background: rgba(102,126,234,0.15);
+            color: #a5b4fc;
+            font-size: 12px;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🛡️ Admin Dashboard</h1>
+        <p class="subtitle">Live stats, reports, and bans. Auto-refreshes every 5 seconds.</p>
+
+        <!-- Live stats -->
+        <div class="grid">
+            <div class="card">
+                <div class="stat-label">Online Now</div>
+                <div class="stat-value green" id="onlineNow">0</div>
+            </div>
+            <div class="card">
+                <div class="stat-label">Waiting in Queue</div>
+                <div class="stat-value yellow" id="waitingCount">0</div>
+            </div>
+            <div class="card">
+                <div class="stat-label">Active Chats</div>
+                <div class="stat-value" id="activeRooms">0</div>
+            </div>
+            <div class="card">
+                <div class="stat-label">Peak Online</div>
+                <div class="stat-value" id="peakOnline">0</div>
+            </div>
+            <div class="card">
+                <div class="stat-label">Total Matches</div>
+                <div class="stat-value" id="totalMatches">0</div>
+            </div>
+            <div class="card">
+                <div class="stat-label">Total Sessions</div>
+                <div class="stat-value" id="totalSessions">0</div>
+            </div>
+            <div class="card">
+                <div class="stat-label">Avg Session (s)</div>
+                <div class="stat-value" id="avgSession">0</div>
+            </div>
+            <div class="card">
+                <div class="stat-label">Total Reports</div>
+                <div class="stat-value red" id="totalReports">0</div>
+            </div>
+        </div>
+
+        <!-- Hourly connections chart -->
+        <div class="section">
+            <h2>📈 Connections by Hour (UTC)</h2>
+            <div class="bars" id="hourlyBars"></div>
+        </div>
+
+        <!-- Popular tags -->
+        <div class="section">
+            <h2>🎯 Popular Interest Tags</h2>
+            <div id="tagCounts"></div>
+        </div>
+
+        <!-- Recent reports -->
+        <div class="section">
+            <h2>🚨 Recent Reports</h2>
+            <div id="reportsContainer">
+                <div class="empty">No reports yet</div>
+            </div>
+        </div>
+
+        <!-- Active bans -->
+        <div class="section">
+            <h2>🔨 Active Bans</h2>
+            <div id="bansContainer">
+                <div class="empty">No active bans</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const PW = new URLSearchParams(location.search).get('pw') || '';
+
+        async function fetchStats() {
+            try {
+                const resp = await fetch(`/api/admin/stats?pw=${encodeURIComponent(PW)}`);
+                if (!resp.ok) {
+                    document.body.innerHTML = '<h1 style="color:#ef4444;padding:40px;">Access Denied ❌</h1>';
+                    return;
+                }
+                const data = await resp.json();
+                renderStats(data);
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        function renderStats(d) {
+            document.getElementById('onlineNow').textContent = d.online_now;
+            document.getElementById('waitingCount').textContent = d.waiting;
+            document.getElementById('activeRooms').textContent = d.active_rooms;
+            document.getElementById('peakOnline').textContent = d.peak_online;
+            document.getElementById('totalMatches').textContent = d.total_matches;
+            document.getElementById('totalSessions').textContent = d.total_sessions;
+            document.getElementById('avgSession').textContent = d.avg_session_seconds;
+            document.getElementById('totalReports').textContent = d.total_reports;
+
+            // Hourly chart
+            const hours = Object.keys(d.hourly_connections).sort();
+            const maxVal = Math.max(...Object.values(d.hourly_connections), 1);
+            const barsHtml = hours.length
+                ? hours.map(h => {
+                    const val = d.hourly_connections[h];
+                    const pct = (val / maxVal) * 100;
+                    return `<div class="bar" style="height:${pct}%" title="${h}:00 — ${val} connections">
+                        <span class="bar-label">${h}</span>
+                    </div>`;
+                }).join('')
+                : '<div class="empty">No data yet</div>';
+            document.getElementById('hourlyBars').innerHTML = barsHtml;
+
+            // Tags
+            const tags = Object.entries(d.tag_counts).sort((a, b) => b[1] - a[1]);
+            document.getElementById('tagCounts').innerHTML = tags.length
+                ? tags.map(([tag, count]) => `<span class="tag-chip">${tag}: ${count}</span>`).join('')
+                : '<div class="empty">No matches yet</div>';
+
+            // Reports
+            const reportsContainer = document.getElementById('reportsContainer');
+            if (d.recent_reports.length === 0) {
+                reportsContainer.innerHTML = '<div class="empty">No reports yet 🎉</div>';
+            } else {
+                reportsContainer.innerHTML = `<table>
+                    <thead><tr>
+                        <th>Time</th>
+                        <th>Reason</th>
+                        <th>Tag</th>
+                        <th>Reporter IP</th>
+                        <th>Action</th>
+                    </tr></thead>
+                    <tbody>
+                    ${d.recent_reports.map(r => `
+                        <tr>
+                            <td>${new Date(r.ts).toLocaleString()}</td>
+                            <td><span class="badge ${r.reason}">${r.reason}</span></td>
+                            <td>${r.tag}</td>
+                            <td>${r.reporter_ip || '—'}</td>
+                            <td>—</td>
+                        </tr>
+                    `).join('')}
+                    </tbody></table>`;
+            }
+
+            // Bans
+            const bansContainer = document.getElementById('bansContainer');
+            const banEntries = Object.entries(d.bans);
+            if (banEntries.length === 0) {
+                bansContainer.innerHTML = '<div class="empty">No active bans</div>';
+            } else {
+                bansContainer.innerHTML = `<table>
+                    <thead><tr>
+                        <th>IP</th>
+                        <th>Reason</th>
+                        <th>Until</th>
+                        <th>Action</th>
+                    </tr></thead>
+                    <tbody>
+                    ${banEntries.map(([ip, info]) => `
+                        <tr>
+                            <td><code>${ip}</code></td>
+                            <td>${info.reason}</td>
+                            <td>${info.until ? new Date(info.until).toLocaleString() : '♾️ Permanent'}</td>
+                            <td><button class="unban-btn" onclick="unban('${ip}')">Unban</button></td>
+                        </tr>
+                    `).join('')}
+                    </tbody></table>`;
+            }
+        }
+
+        async function unban(ip) {
+            if (!confirm(`Unban ${ip}?`)) return;
+            await fetch('/api/admin/unban', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ pw: PW, ip })
+            });
+            fetchStats();
+        }
+
+        async function ban(ip, reason) {
+            if (!confirm(`Ban ${ip}?`)) return;
+            await fetch('/api/admin/ban', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ pw: PW, ip, reason })
+            });
+            fetchStats();
+        }
+
+        fetchStats();
+        setInterval(fetchStats, 5000);
+    </script>
+</body>
+</html>

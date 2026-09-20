@@ -12,6 +12,31 @@
     <meta name="apple-mobile-web-app-title" content="RandomChat">
     <title>Random Video Chat</title>
     <style>
+        :root {
+            --bg: #0a0a0f;
+            --bg-secondary: #12121a;
+            --bg-tertiary: #1a1a24;
+            --text: #ffffff;
+            --text-secondary: #9ca3af;
+            --accent-from: #667eea;
+            --accent-to: #764ba2;
+            --border: rgba(255,255,255,0.08);
+        }
+
+        body.light {
+            --bg: #f5f5f7;
+            --bg-secondary: #ffffff;
+            --bg-tertiary: #f0f0f5;
+            --text: #111111;
+            --text-secondary: #666666;
+            --border: rgba(0,0,0,0.08);
+        }
+
+        body.theme-blue { --accent-from: #3b82f6; --accent-to: #0ea5e9; }
+        body.theme-green { --accent-from: #10b981; --accent-to: #059669; }
+        body.theme-pink { --accent-from: #ec4899; --accent-to: #be185d; }
+        body.theme-orange { --accent-from: #f97316; --accent-to: #ea580c; }
+
         * {
             margin: 0;
             padding: 0;
@@ -30,9 +55,10 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-            background: #0a0a0f;
-            color: white;
+            background: var(--bg);
+            color: var(--text);
             user-select: none;
+            transition: background 0.3s, color 0.3s;
         }
 
         .app {
@@ -52,7 +78,7 @@
             justify-content: center;
             gap: 8px;
             flex-shrink: 0;
-            background: #0a0a0f;
+            background: var(--bg);
             z-index: 10;
         }
 
@@ -60,21 +86,21 @@
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            background: rgba(255,255,255,0.08);
-            color: white;
+            background: rgba(127,127,127,0.12);
+            color: var(--text);
             padding: 6px 14px;
             border-radius: 50px;
             font-size: 12px;
             font-weight: 500;
-            max-width: 70%;
+            max-width: 60%;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
             transition: background 0.3s;
         }
 
-        .status-pill.error { background: rgba(220,38,38,0.75); }
-        .status-pill.success { background: rgba(16,185,129,0.75); }
+        .status-pill.error { background: rgba(220,38,38,0.75); color: white; }
+        .status-pill.success { background: rgba(16,185,129,0.75); color: white; }
 
         .status-dot {
             width: 8px;
@@ -89,13 +115,13 @@
 
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
 
-        .help-btn {
+        .icon-btn-top {
             width: 32px;
             height: 32px;
             border-radius: 50%;
-            background: rgba(255,255,255,0.08);
-            border: 1px solid rgba(255,255,255,0.12);
-            color: white;
+            background: rgba(127,127,127,0.12);
+            border: none;
+            color: var(--text);
             font-size: 15px;
             cursor: pointer;
             display: flex;
@@ -105,7 +131,22 @@
             transition: background 0.15s;
         }
 
-        .help-btn:active { background: rgba(255,255,255,0.18); }
+        .icon-btn-top:active { background: rgba(127,127,127,0.25); }
+
+        .timer-pill {
+            background: rgba(127,127,127,0.12);
+            color: var(--text-secondary);
+            padding: 6px 12px;
+            border-radius: 50px;
+            font-size: 12px;
+            font-variant-numeric: tabular-nums;
+            font-weight: 600;
+            min-width: 60px;
+            text-align: center;
+            display: none;
+        }
+
+        .timer-pill.active { display: inline-flex; align-items: center; justify-content: center; }
 
         /* ===== Tag Selector ===== */
         .tag-selector {
@@ -114,10 +155,10 @@
             gap: 6px;
             overflow-x: auto;
             overflow-y: hidden;
-            background: #0a0a0f;
+            background: var(--bg);
             scrollbar-width: none;
             flex-shrink: 0;
-            border-top: 1px solid rgba(255,255,255,0.04);
+            border-top: 1px solid var(--border);
         }
 
         .tag-selector::-webkit-scrollbar { display: none; }
@@ -126,9 +167,9 @@
             flex-shrink: 0;
             padding: 7px 14px;
             border-radius: 20px;
-            background: rgba(255,255,255,0.06);
-            border: 1px solid rgba(255,255,255,0.1);
-            color: rgba(255,255,255,0.75);
+            background: rgba(127,127,127,0.08);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
             font-size: 12px;
             font-weight: 500;
             cursor: pointer;
@@ -140,7 +181,7 @@
         .tag-chip:active { transform: scale(0.95); }
 
         .tag-chip.active {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, var(--accent-from), var(--accent-to));
             border-color: transparent;
             color: white;
             box-shadow: 0 2px 10px rgba(102,126,234,0.4);
@@ -162,10 +203,12 @@
             height: 100%;
             object-fit: cover;
             background: #111;
-            transition: filter 0.2s ease;
+            transition: filter 0.2s ease, transform 0.2s ease;
+            transform-origin: center center;
         }
 
         #remoteVideo.blurred { filter: blur(40px); }
+        #remoteVideo.mirrored { transform: scaleX(-1); }
 
         .video-placeholder {
             position: absolute;
@@ -185,7 +228,7 @@
             width: 100px;
             height: 100px;
             border-radius: 50%;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, var(--accent-from), var(--accent-to));
             display: flex;
             align-items: center;
             justify-content: center;
@@ -219,8 +262,12 @@
             border: 2px solid rgba(255,255,255,0.15);
             z-index: 5;
             cursor: grab;
-            transition: transform 0.15s;
+            transition: transform 0.15s, box-shadow 0.2s;
             touch-action: none;
+        }
+
+        .self-video-wrapper.speaking {
+            box-shadow: 0 0 0 3px #10b981, 0 4px 20px rgba(16,185,129,0.5);
         }
 
         .self-video-wrapper:active { cursor: grabbing; }
@@ -228,7 +275,7 @@
         .self-video-wrapper.dragging {
             transition: none;
             box-shadow: 0 8px 30px rgba(102,126,234,0.6);
-            border-color: rgba(102,126,234,0.8);
+            border-color: var(--accent-from);
             transform: scale(1.05);
         }
 
@@ -254,7 +301,6 @@
             backdrop-filter: blur(5px);
         }
 
-        /* ===== Match celebration ===== */
         .match-celebration {
             position: absolute;
             inset: 0;
@@ -291,13 +337,13 @@
         .match-celebration-inner .emoji { font-size: 56px; margin-bottom: 8px; }
         .match-celebration-inner .text { font-size: 18px; font-weight: 700; }
 
-        /* ===== Chat Area ===== */
+        /* ===== Chat ===== */
         .chat-area {
             flex-shrink: 0;
             display: flex;
             flex-direction: column;
-            background: #12121a;
-            border-top: 1px solid rgba(255,255,255,0.08);
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border);
             max-height: 35vh;
             min-height: 140px;
             transition: max-height 0.3s ease;
@@ -316,10 +362,7 @@
         }
 
         .chat-messages::-webkit-scrollbar { width: 4px; }
-        .chat-messages::-webkit-scrollbar-thumb {
-            background: rgba(255,255,255,0.15);
-            border-radius: 2px;
-        }
+        .chat-messages::-webkit-scrollbar-thumb { background: rgba(127,127,127,0.2); border-radius: 2px; }
 
         .message {
             max-width: 82%;
@@ -338,22 +381,22 @@
 
         .message.me {
             align-self: flex-end;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, var(--accent-from), var(--accent-to));
             color: white;
             border-bottom-right-radius: 4px;
         }
 
         .message.them {
             align-self: flex-start;
-            background: rgba(255,255,255,0.1);
-            color: white;
+            background: rgba(127,127,127,0.15);
+            color: var(--text);
             border-bottom-left-radius: 4px;
         }
 
         .message.system {
             align-self: center;
-            background: rgba(255,255,255,0.05);
-            color: #9ca3af;
+            background: rgba(127,127,127,0.08);
+            color: var(--text-secondary);
             font-size: 11px;
             font-style: italic;
             padding: 3px 12px;
@@ -373,8 +416,8 @@
 
         .typing-indicator {
             align-self: flex-start;
-            background: rgba(255,255,255,0.1);
-            color: rgba(255,255,255,0.7);
+            background: rgba(127,127,127,0.15);
+            color: var(--text-secondary);
             padding: 8px 14px;
             border-radius: 14px;
             border-bottom-left-radius: 4px;
@@ -390,7 +433,7 @@
             width: 5px;
             height: 5px;
             border-radius: 50%;
-            background: rgba(255,255,255,0.7);
+            background: var(--text-secondary);
             animation: typing 1.4s infinite;
             margin: 0 1px;
         }
@@ -407,9 +450,9 @@
             display: flex;
             padding: 8px 12px;
             padding-bottom: calc(8px + env(safe-area-inset-bottom));
-            gap: 8px;
-            background: rgba(255,255,255,0.03);
-            border-top: 1px solid rgba(255,255,255,0.08);
+            gap: 6px;
+            background: rgba(127,127,127,0.04);
+            border-top: 1px solid var(--border);
             flex-shrink: 0;
             align-items: center;
         }
@@ -418,48 +461,25 @@
             flex: 1;
             padding: 11px 16px;
             border-radius: 22px;
-            border: 1px solid rgba(255,255,255,0.12);
-            background: rgba(255,255,255,0.08);
-            color: white;
+            border: 1px solid var(--border);
+            background: rgba(127,127,127,0.08);
+            color: var(--text);
             font-size: 14px;
             outline: none;
             font-family: inherit;
             min-width: 0;
         }
 
-        .chat-input-row input:focus {
-            border-color: #667eea;
-            background: rgba(255,255,255,0.12);
-        }
-
-        .chat-input-row input::placeholder { color: rgba(255,255,255,0.4); }
+        .chat-input-row input:focus { border-color: var(--accent-from); }
+        .chat-input-row input::placeholder { color: var(--text-secondary); opacity: 0.6; }
         .chat-input-row input:disabled { opacity: 0.5; cursor: not-allowed; }
 
-        .emoji-btn {
+        .emoji-btn, .chat-send-btn {
             width: 42px;
             height: 42px;
             border-radius: 50%;
-            background: rgba(255,255,255,0.08);
             border: none;
             color: white;
-            font-size: 20px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-            transition: transform 0.15s;
-        }
-
-        .emoji-btn:active { transform: scale(0.9); }
-
-        .chat-send-btn {
-            width: 42px;
-            height: 42px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
             font-size: 18px;
             cursor: pointer;
             display: flex;
@@ -469,16 +489,19 @@
             transition: transform 0.15s;
         }
 
-        .chat-send-btn:active { transform: scale(0.9); }
+        .emoji-btn { background: rgba(127,127,127,0.12); font-size: 20px; color: var(--text); }
+
+        .chat-send-btn { background: linear-gradient(135deg, var(--accent-from), var(--accent-to)); }
+
+        .emoji-btn:active, .chat-send-btn:active { transform: scale(0.9); }
         .chat-send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
-        /* ===== Emoji Picker ===== */
         .emoji-picker {
             position: absolute;
             bottom: 120px;
             left: 12px;
             right: 12px;
-            background: #1a1a24;
+            background: var(--bg-tertiary);
             border-radius: 16px;
             padding: 10px;
             display: grid;
@@ -488,18 +511,14 @@
             overflow-y: auto;
             z-index: 100;
             box-shadow: 0 8px 30px rgba(0,0,0,0.7);
-            border: 1px solid rgba(255,255,255,0.1);
+            border: 1px solid var(--border);
             transform: translateY(20px);
             opacity: 0;
             pointer-events: none;
             transition: all 0.2s;
         }
 
-        .emoji-picker.show {
-            transform: translateY(0);
-            opacity: 1;
-            pointer-events: auto;
-        }
+        .emoji-picker.show { transform: translateY(0); opacity: 1; pointer-events: auto; }
 
         .emoji-picker span {
             font-size: 22px;
@@ -510,19 +529,19 @@
             transition: background 0.15s;
         }
 
-        .emoji-picker span:active { background: rgba(255,255,255,0.15); }
+        .emoji-picker span:active { background: rgba(127,127,127,0.15); }
 
         /* ===== Bottom Controls ===== */
         .bottom-controls {
             flex-shrink: 0;
             padding: 10px 8px;
             padding-bottom: calc(10px + env(safe-area-inset-bottom));
-            background: #0a0a0f;
+            background: var(--bg);
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 6px;
-            border-top: 1px solid rgba(255,255,255,0.06);
+            border-top: 1px solid var(--border);
             flex-wrap: nowrap;
         }
 
@@ -530,9 +549,9 @@
             width: 44px;
             height: 44px;
             border-radius: 50%;
-            background: rgba(255,255,255,0.1);
-            border: 1px solid rgba(255,255,255,0.12);
-            color: white;
+            background: rgba(127,127,127,0.12);
+            border: 1px solid var(--border);
+            color: var(--text);
             font-size: 17px;
             cursor: pointer;
             display: flex;
@@ -543,24 +562,22 @@
             flex-shrink: 0;
         }
 
-        .circle-btn:active { transform: scale(0.92); background: rgba(255,255,255,0.18); }
-
-        .circle-btn.off { background: rgba(220,38,38,0.7); border-color: rgba(220,38,38,0.5); }
+        .circle-btn:active { transform: scale(0.92); background: rgba(127,127,127,0.22); }
+        .circle-btn.off { background: rgba(220,38,38,0.7); border-color: rgba(220,38,38,0.5); color: white; }
 
         .circle-btn.primary {
             width: 56px;
             height: 56px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, var(--accent-from), var(--accent-to));
             border: none;
             font-size: 22px;
+            color: white;
             box-shadow: 0 4px 16px rgba(102,126,234,0.4);
         }
 
-        .circle-btn.primary:active { box-shadow: 0 2px 8px rgba(102,126,234,0.6); }
-
-        .circle-btn.danger { background: rgba(220,38,38,0.8); border: none; }
+        .circle-btn.danger { background: rgba(220,38,38,0.8); border: none; color: white; }
         .circle-btn.report { background: rgba(220,38,38,0.15); border-color: rgba(220,38,38,0.4); }
-        .circle-btn.report:active { background: rgba(220,38,38,0.5); }
+        .circle-btn.report:active { background: rgba(220,38,38,0.5); color: white; }
         .circle-btn:disabled { opacity: 0.35; cursor: not-allowed; }
         .circle-btn:disabled:active { transform: none; }
 
@@ -582,7 +599,7 @@
             align-items: center;
             justify-content: center;
             padding: 0 4px;
-            border: 2px solid #0a0a0f;
+            border: 2px solid var(--bg);
             opacity: 0;
             transform: scale(0);
             transition: all 0.2s;
@@ -594,7 +611,7 @@
         .modal {
             position: fixed;
             inset: 0;
-            background: rgba(0,0,0,0.95);
+            background: rgba(0,0,0,0.9);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -625,22 +642,11 @@
         .modal-content h2 { margin-bottom: 12px; font-size: 22px; }
         .modal-content > p { margin-bottom: 16px; color: #666; line-height: 1.5; font-size: 14px; }
 
-        .feature-list {
-            text-align: left;
-            margin: 16px 0;
-            padding-left: 0;
-            list-style: none;
-        }
-
-        .feature-list li {
-            margin: 8px 0;
-            color: #555;
-            font-size: 13px;
-            line-height: 1.5;
-        }
+        .feature-list { text-align: left; margin: 16px 0; padding-left: 0; list-style: none; }
+        .feature-list li { margin: 8px 0; color: #555; font-size: 13px; line-height: 1.5; }
 
         .btn-modal {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, var(--accent-from), var(--accent-to));
             color: white;
             padding: 14px 28px;
             border-radius: 50px;
@@ -672,12 +678,7 @@
             line-height: 1.6;
         }
 
-        .report-reasons {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            margin: 16px 0;
-        }
+        .report-reasons { display: flex; flex-direction: column; gap: 8px; margin: 16px 0; }
 
         .report-reason {
             padding: 12px 16px;
@@ -693,13 +694,38 @@
         }
 
         .report-reason:active,
-        .report-reason.selected {
-            background: #fef2f2;
-            border-color: #dc2626;
-            color: #991b1b;
+        .report-reason.selected { background: #fef2f2; border-color: #dc2626; color: #991b1b; }
+
+        .theme-options {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin: 16px 0;
         }
 
-        /* ===== Toast ===== */
+        .theme-opt {
+            padding: 12px 8px;
+            border-radius: 12px;
+            border: 2px solid #e5e7eb;
+            cursor: pointer;
+            text-align: center;
+            font-size: 12px;
+            font-weight: 600;
+            background: #f9fafb;
+            color: #333;
+            transition: all 0.15s;
+        }
+
+        .theme-opt.selected { border-color: var(--accent-from); background: #eef2ff; }
+
+        .theme-dot {
+            display: block;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            margin: 0 auto 6px;
+        }
+
         .toast {
             position: fixed;
             bottom: 120px;
@@ -726,13 +752,12 @@
             to { opacity: 1; transform: translateX(-50%) translateY(0); }
         }
 
-        /* ===== Install Banner ===== */
         .install-banner {
             position: fixed;
             bottom: 100px;
             left: 12px;
             right: 12px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, var(--accent-from), var(--accent-to));
             color: white;
             padding: 12px 16px;
             border-radius: 14px;
@@ -749,9 +774,10 @@
         .install-banner .icon { font-size: 28px; flex-shrink: 0; }
         .install-banner .text { flex: 1; font-size: 13px; line-height: 1.3; }
         .install-banner .text strong { display: block; font-size: 14px; margin-bottom: 2px; }
+
         .install-banner button {
             background: white;
-            color: #667eea;
+            color: var(--accent-from);
             border: none;
             padding: 8px 14px;
             border-radius: 20px;
@@ -761,6 +787,7 @@
             flex-shrink: 0;
             font-family: inherit;
         }
+
         .install-banner .close-x {
             background: transparent;
             color: white;
@@ -770,16 +797,69 @@
             border: none;
         }
 
-        /* ===== Desktop ===== */
+        /* Video controls overlay (top right) */
+        .video-controls {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            display: flex;
+            gap: 6px;
+            z-index: 6;
+        }
+
+        .video-ctrl-btn {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: rgba(0,0,0,0.55);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255,255,255,0.15);
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.15s;
+        }
+
+        .video-ctrl-btn.visible { display: flex; }
+        .video-ctrl-btn:active { transform: scale(0.9); }
+        .video-ctrl-btn.active { background: rgba(220,38,38,0.8); }
+
+        /* Speaking indicator on remote */
+        .speaking-indicator {
+            position: absolute;
+            bottom: 12px;
+            left: 12px;
+            background: rgba(16,185,129,0.9);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            display: none;
+            z-index: 6;
+            animation: pulse-speak 0.8s ease-in-out infinite;
+        }
+
+        .speaking-indicator.active { display: block; }
+
+        @keyframes pulse-speak {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.08); }
+        }
+
+        /* Desktop */
         @media (min-width: 900px) {
             .app { max-width: 1400px; margin: 0 auto; flex-direction: row; }
-            .video-area { flex: 2; border-right: 1px solid rgba(255,255,255,0.08); }
+            .video-area { flex: 2; border-right: 1px solid var(--border); }
             .self-video-wrapper { width: 140px; height: 200px; top: 20px; right: 20px; }
             .right-column {
                 flex: 1;
                 display: flex;
                 flex-direction: column;
-                background: #12121a;
+                background: var(--bg-secondary);
                 max-width: 420px;
                 min-width: 320px;
             }
@@ -817,6 +897,16 @@
                 <div class="self-label">You</div>
             </div>
 
+            <!-- Video controls (top-left) -->
+            <div class="video-controls">
+                <button class="video-ctrl-btn" id="muteStrangerBtn" title="Mute Stranger">🔇</button>
+                <button class="video-ctrl-btn" id="mirrorBtn" title="Mirror Video">🪞</button>
+                <button class="video-ctrl-btn" id="screenshotBtn" title="Screenshot">📸</button>
+                <button class="video-ctrl-btn" id="qualityBtn" title="Video Quality">⚙️</button>
+            </div>
+
+            <div class="speaking-indicator" id="speakingIndicator">🎤 Stranger is speaking</div>
+
             <div class="match-celebration" id="matchCelebration">
                 <div class="match-celebration-inner">
                     <div class="emoji">🎉</div>
@@ -831,17 +921,22 @@
                     <span class="status-dot" id="statusDot"></span>
                     <span id="statusText">Ready to start</span>
                 </div>
-                <button class="help-btn" id="helpBtn" title="Safety Tips">?</button>
+                <div class="timer-pill" id="timerPill">00:00</div>
+                <button class="icon-btn-top" id="helpBtn" title="Safety Tips">?</button>
+                <button class="icon-btn-top" id="themeBtn" title="Theme">🎨</button>
             </div>
 
-            <!-- Tag Selector -->
             <div class="tag-selector" id="tagSelector">
                 <button class="tag-chip active" data-tag="any">🎲 Any</button>
                 <button class="tag-chip" data-tag="music">🎵 Music</button>
                 <button class="tag-chip" data-tag="gaming">🎮 Gaming</button>
-                <button class="tag-chip" data-tag="language">🌍 Language</button>
                 <button class="tag-chip" data-tag="movies">🎬 Movies</button>
                 <button class="tag-chip" data-tag="justchat">💬 Just Chat</button>
+                <button class="tag-chip" data-tag="english">🇬🇧 English</button>
+                <button class="tag-chip" data-tag="hindi">🇮🇳 Hindi</button>
+                <button class="tag-chip" data-tag="spanish">🇪🇸 Spanish</button>
+                <button class="tag-chip" data-tag="french">🇫🇷 French</button>
+                <button class="tag-chip" data-tag="arabic">🇸🇦 Arabic</button>
             </div>
 
             <div class="chat-area" id="chatArea">
@@ -850,7 +945,7 @@
                     Stranger is typing<span class="typing-dots"><span></span><span></span><span></span></span>
                 </div>
                 <div class="chat-input-row">
-                    <button class="emoji-btn" id="emojiBtn" title="Emoji">😊</button>
+                    <button class="emoji-btn" id="emojiBtn">😊</button>
                     <input type="text" id="chatInput" placeholder="Type a message..." maxlength="500" autocomplete="off" disabled>
                     <button class="chat-send-btn" id="chatSendBtn" disabled>➤</button>
                 </div>
@@ -859,16 +954,15 @@
             <div class="emoji-picker" id="emojiPicker"></div>
 
             <div class="bottom-controls">
-                <button class="circle-btn" id="toggleMic" title="Toggle Microphone">🎤</button>
-                <button class="circle-btn" id="toggleCam" title="Toggle Camera">📹</button>
-                <button class="circle-btn switch-cam-btn" id="switchCamBtn" title="Switch Camera">🔄</button>
-                <button class="circle-btn primary" id="startBtn" title="Start Chatting">📞</button>
-                <button class="circle-btn" id="chatToggleBtn" title="Toggle Chat">
-                    💬
-                    <span class="badge" id="chatBadge">0</span>
+                <button class="circle-btn" id="toggleMic" title="Mic (Space)">🎤</button>
+                <button class="circle-btn" id="toggleCam" title="Camera">📹</button>
+                <button class="circle-btn switch-cam-btn" id="switchCamBtn" title="Flip Camera">🔄</button>
+                <button class="circle-btn primary" id="startBtn" title="Start (N)">📞</button>
+                <button class="circle-btn" id="chatToggleBtn" title="Chat">
+                    💬<span class="badge" id="chatBadge">0</span>
                 </button>
-                <button class="circle-btn report" id="reportBtn" title="Report Stranger" disabled>🚨</button>
-                <button class="circle-btn danger" id="endBtn" disabled title="End Chat">✕</button>
+                <button class="circle-btn report" id="reportBtn" title="Report" disabled>🚨</button>
+                <button class="circle-btn danger" id="endBtn" disabled title="End (Esc)">✕</button>
             </div>
         </div>
     </div>
@@ -876,10 +970,7 @@
     <!-- Install Banner -->
     <div class="install-banner" id="installBanner">
         <div class="icon">📱</div>
-        <div class="text">
-            <strong>Install App</strong>
-            Add to home screen for the best experience
-        </div>
+        <div class="text"><strong>Install App</strong>Add to home screen</div>
         <button id="installBtn">Install</button>
         <button class="close-x" id="installClose">✕</button>
     </div>
@@ -889,9 +980,9 @@
         <div class="modal-content">
             <div class="age-icon">🔞</div>
             <h2>Age Verification</h2>
-            <p>This is an adult random video chat platform. You must be <strong>18 years or older</strong> to use this service.</p>
+            <p>You must be <strong>18 years or older</strong> to use this service.</p>
             <div class="age-warning">
-                ⚠️ By clicking "I am 18+", you confirm that you are legally an adult and agree to our community guidelines:<br><br>
+                ⚠️ By clicking "I am 18+", you confirm you are legally an adult and agree:<br><br>
                 🚫 No nudity or sexual content<br>
                 🚫 No harassment or hate speech<br>
                 🚫 No minors on camera<br>
@@ -902,42 +993,41 @@
         </div>
     </div>
 
-    <!-- Welcome Modal -->
+    <!-- Welcome -->
     <div class="modal hidden" id="welcomeModal">
         <div class="modal-content">
             <h2>🎥 Random Video Chat</h2>
-            <p>Connect with strangers from around the world instantly!</p>
+            <p>Connect with strangers worldwide!</p>
             <ul class="feature-list">
                 <li>✅ 100% Anonymous</li>
                 <li>✅ No data storage</li>
                 <li>✅ Video + Text chat</li>
-                <li>✅ Pick your interest tag</li>
+                <li>✅ Interest tags</li>
                 <li>✅ Works on mobile & desktop</li>
             </ul>
-            <p style="font-size: 13px; color: #888; margin-top: 12px;">Please allow camera and microphone access</p>
+            <p style="font-size: 13px; color: #888;">Allow camera and microphone access</p>
             <button class="btn-modal" id="requestPermissionBtn">🎥 Allow Access & Start</button>
         </div>
     </div>
 
-    <!-- Safety Tips -->
+    <!-- Safety -->
     <div class="modal hidden" id="safetyModal">
         <div class="modal-content">
             <h2>🛡️ Safety Tips</h2>
-            <p>Stay safe while chatting with strangers:</p>
             <ul class="feature-list">
-                <li>🔒 <strong>Never share personal info</strong> — real name, address, phone, social media</li>
-                <li>📸 <strong>Don't send money or gifts</strong> — no matter what they say</li>
-                <li>👁️ <strong>Be careful with links</strong> — they may be phishing or malware</li>
-                <li>🚨 <strong>Report bad behavior</strong> — use the 🚨 button</li>
-                <li>✋ <strong>Trust your gut</strong> — if something feels off, click Next</li>
-                <li>🎥 <strong>Anything shown can be recorded</strong> — never show anything you wouldn't want public</li>
-                <li>👶 <strong>No minors allowed</strong> — you must be 18+</li>
+                <li>🔒 <strong>Never share personal info</strong></li>
+                <li>📸 <strong>Don't send money or gifts</strong></li>
+                <li>👁️ <strong>Be careful with links</strong></li>
+                <li>🚨 <strong>Report bad behavior</strong></li>
+                <li>✋ <strong>Trust your gut</strong></li>
+                <li>🎥 <strong>Anything shown can be recorded</strong></li>
+                <li>👶 <strong>No minors allowed (18+)</strong></li>
             </ul>
             <button class="btn-modal" id="safetyOkBtn">Got it</button>
         </div>
     </div>
 
-    <!-- Report Modal -->
+    <!-- Report -->
     <div class="modal hidden" id="reportModal">
         <div class="modal-content">
             <h2>🚨 Report Stranger</h2>
@@ -960,18 +1050,63 @@
         <div class="modal-content">
             <div class="age-icon">✅</div>
             <h2>Report Submitted</h2>
-            <p>Thank you for helping keep this community safe. The user has been disconnected.</p>
+            <p>Thank you. The user has been disconnected.</p>
             <button class="btn-modal" id="reportThanksOk">Find New Stranger</button>
+        </div>
+    </div>
+
+    <!-- Theme Modal -->
+    <div class="modal hidden" id="themeModal">
+        <div class="modal-content">
+            <h2>🎨 Appearance</h2>
+            <p>Choose your theme</p>
+            <div class="theme-options">
+                <div class="theme-opt" data-theme="dark">
+                    <span class="theme-dot" style="background: linear-gradient(135deg,#667eea,#764ba2);"></span>
+                    Purple
+                </div>
+                <div class="theme-opt" data-theme="theme-blue">
+                    <span class="theme-dot" style="background: linear-gradient(135deg,#3b82f6,#0ea5e9);"></span>
+                    Blue
+                </div>
+                <div class="theme-opt" data-theme="theme-green">
+                    <span class="theme-dot" style="background: linear-gradient(135deg,#10b981,#059669);"></span>
+                    Green
+                </div>
+                <div class="theme-opt" data-theme="theme-pink">
+                    <span class="theme-dot" style="background: linear-gradient(135deg,#ec4899,#be185d);"></span>
+                    Pink
+                </div>
+                <div class="theme-opt" data-theme="theme-orange">
+                    <span class="theme-dot" style="background: linear-gradient(135deg,#f97316,#ea580c);"></span>
+                    Orange
+                </div>
+                <div class="theme-opt" data-theme="light">
+                    <span class="theme-dot" style="background: #f5f5f7;"></span>
+                    Light
+                </div>
+            </div>
+            <button class="btn-modal" id="themeOkBtn">Done</button>
+        </div>
+    </div>
+
+    <!-- Banned -->
+    <div class="modal hidden" id="bannedModal">
+        <div class="modal-content">
+            <div class="age-icon">🔨</div>
+            <h2>You are banned</h2>
+            <p id="banReason">You have been banned from this service.</p>
+            <p style="font-size: 12px; color: #999;">If you believe this is a mistake, contact the site admin.</p>
         </div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.min.js"></script>
     <script>
         // ============================================================
-        // 🔑 TURN SERVER CONFIGURATION — REPLACE THESE TWO VALUES
+        // 🔑 TURN CONFIG — REPLACE
         // ============================================================
-        const METERED_APP_NAME = "SODI";       // ⬅️ REPLACE
-        const METERED_API_KEY  = "1be2e69bed1737aaef7968d0c1372914c246";   // ⬅️ REPLACE
+        const METERED_APP_NAME = "SODI";
+        const METERED_API_KEY  = "1be2e69bed1737aaef7968d0c1372914c246";
         // ============================================================
 
         // ===== PWA =====
@@ -998,7 +1133,6 @@
                 document.getElementById('installBanner').classList.remove('show');
             }
         };
-
         document.getElementById('installClose').onclick = () => {
             document.getElementById('installBanner').classList.remove('show');
             localStorage.setItem('installBannerDismissed', 'true');
@@ -1008,68 +1142,51 @@
         function playMatchSound() {
             try {
                 const ctx = new (window.AudioContext || window.webkitAudioContext)();
-                const notes = [523.25, 659.25, 783.99]; // C5, E5, G5
-                notes.forEach((freq, i) => {
-                    const osc = ctx.createOscillator();
-                    const gain = ctx.createGain();
-                    osc.type = 'sine';
-                    osc.frequency.value = freq;
-                    gain.gain.setValueAtTime(0.15, ctx.currentTime + i * 0.1);
-                    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + i * 0.1 + 0.3);
-                    osc.connect(gain);
-                    gain.connect(ctx.destination);
-                    osc.start(ctx.currentTime + i * 0.1);
-                    osc.stop(ctx.currentTime + i * 0.1 + 0.3);
+                [523.25, 659.25, 783.99].forEach((f, i) => {
+                    const o = ctx.createOscillator(), g = ctx.createGain();
+                    o.type = 'sine'; o.frequency.value = f;
+                    g.gain.setValueAtTime(0.15, ctx.currentTime + i * 0.1);
+                    g.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + i * 0.1 + 0.3);
+                    o.connect(g); g.connect(ctx.destination);
+                    o.start(ctx.currentTime + i * 0.1); o.stop(ctx.currentTime + i * 0.1 + 0.3);
                 });
-            } catch (e) { console.warn('Sound failed:', e); }
+            } catch (e) {}
         }
 
         function playMessageSound() {
             try {
                 const ctx = new (window.AudioContext || window.webkitAudioContext)();
-                const osc = ctx.createOscillator();
-                const gain = ctx.createGain();
-                osc.type = 'sine';
-                osc.frequency.value = 880;
-                gain.gain.setValueAtTime(0.1, ctx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.15);
-                osc.connect(gain);
-                gain.connect(ctx.destination);
-                osc.start();
-                osc.stop(ctx.currentTime + 0.15);
+                const o = ctx.createOscillator(), g = ctx.createGain();
+                o.type = 'sine'; o.frequency.value = 880;
+                g.gain.setValueAtTime(0.1, ctx.currentTime);
+                g.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.15);
+                o.connect(g); g.connect(ctx.destination);
+                o.start(); o.stop(ctx.currentTime + 0.15);
             } catch (e) {}
         }
 
-        function vibrate(pattern) {
-            if (navigator.vibrate) {
-                try { navigator.vibrate(pattern); } catch (e) {}
-            }
-        }
+        function vibrate(p) { if (navigator.vibrate) try { navigator.vibrate(p); } catch(e){} }
 
         // ===== Emoji =====
         const EMOJIS = ['😀','😂','🥰','😍','😎','🤔','😴','🤯','😭','😡','🥳','🤩','😇','🙃','😉','😋','👍','👎','👏','🙏','💪','✌️','🤝','👋','❤️','💔','💯','🔥','✨','⭐','🎉','🎊','🎁','🌈','☀️','🌙','⚡','💧','🌸','🌺','🍕','🍔','🍟','🍦','🎂','☕','🍺','🎮','🎯','🏆','🎵','🎶','📱','💻','🚀','🎬','📷'];
 
         function initEmojiPicker() {
             const picker = document.getElementById('emojiPicker');
-            EMOJIS.forEach((emoji) => {
+            EMOJIS.forEach((e) => {
                 const span = document.createElement('span');
-                span.textContent = emoji;
-                span.onclick = () => {
-                    chatInput.value += emoji;
-                    chatInput.focus();
-                };
+                span.textContent = e;
+                span.onclick = () => { chatInput.value += e; chatInput.focus(); };
                 picker.appendChild(span);
             });
         }
 
-        // ===== Safety: Text filter =====
+        // ===== Filter =====
         const BLOCKED_URL_PATTERN = /(https?:\/\/|www\.|\.com|\.net|\.org|\.in|\.xyz|\.ru|\.tk|\.ml|\.ga|\.cf)/i;
         const BLOCKED_WORDS = ['kys', 'kill yourself', 'nigger', 'faggot', 'retard'];
-
         function filterMessage(text) {
-            if (BLOCKED_URL_PATTERN.test(text)) return { ok: false, reason: '🚫 Links are not allowed in chat' };
-            const lower = text.toLowerCase();
-            for (const w of BLOCKED_WORDS) if (lower.includes(w)) return { ok: false, reason: '🚫 Message contains blocked content' };
+            if (BLOCKED_URL_PATTERN.test(text)) return { ok: false, reason: '🚫 Links are not allowed' };
+            const l = text.toLowerCase();
+            for (const w of BLOCKED_WORDS) if (l.includes(w)) return { ok: false, reason: '🚫 Blocked content' };
             return { ok: true };
         }
 
@@ -1080,11 +1197,14 @@
         const placeholderText = document.getElementById('placeholderText');
         const selfVideoWrapper = document.getElementById('selfVideoWrapper');
         const matchCelebration = document.getElementById('matchCelebration');
+        const speakingIndicator = document.getElementById('speakingIndicator');
 
         const statusPill = document.getElementById('statusPill');
         const statusDot = document.getElementById('statusDot');
         const statusText = document.getElementById('statusText');
+        const timerPill = document.getElementById('timerPill');
         const helpBtn = document.getElementById('helpBtn');
+        const themeBtn = document.getElementById('themeBtn');
 
         const startBtn = document.getElementById('startBtn');
         const endBtn = document.getElementById('endBtn');
@@ -1094,6 +1214,11 @@
         const chatToggleBtn = document.getElementById('chatToggleBtn');
         const chatBadge = document.getElementById('chatBadge');
         const reportBtn = document.getElementById('reportBtn');
+
+        const muteStrangerBtn = document.getElementById('muteStrangerBtn');
+        const mirrorBtn = document.getElementById('mirrorBtn');
+        const screenshotBtn = document.getElementById('screenshotBtn');
+        const qualityBtn = document.getElementById('qualityBtn');
 
         const chatArea = document.getElementById('chatArea');
         const chatMessages = document.getElementById('chatMessages');
@@ -1107,20 +1232,20 @@
         const ageModal = document.getElementById('ageModal');
         const ageConfirmBtn = document.getElementById('ageConfirmBtn');
         const ageDenyBtn = document.getElementById('ageDenyBtn');
-
         const welcomeModal = document.getElementById('welcomeModal');
         const requestPermissionBtn = document.getElementById('requestPermissionBtn');
-
         const safetyModal = document.getElementById('safetyModal');
         const safetyOkBtn = document.getElementById('safetyOkBtn');
-
         const reportModal = document.getElementById('reportModal');
         const reportReasons = document.getElementById('reportReasons');
         const reportConfirmBtn = document.getElementById('reportConfirmBtn');
         const reportCancelBtn = document.getElementById('reportCancelBtn');
-
         const reportThanksModal = document.getElementById('reportThanksModal');
         const reportThanksOk = document.getElementById('reportThanksOk');
+        const themeModal = document.getElementById('themeModal');
+        const themeOkBtn = document.getElementById('themeOkBtn');
+        const bannedModal = document.getElementById('bannedModal');
+        const banReason = document.getElementById('banReason');
 
         // ===== State =====
         const socket = io();
@@ -1139,8 +1264,35 @@
         let selectedReportReason = null;
         let selectedTag = 'any';
         let currentCamera = 'user';
+        let strangerMuted = false;
+        let remoteMirrored = false;
+        let sessionStart = null;
+        let timerInterval = null;
+        let audioContext = null;
+        let analyser = null;
+        let speakCheckInterval = null;
 
         const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+        // ===== Theme =====
+        function applyTheme() {
+            const theme = localStorage.getItem('theme') || 'dark';
+            document.body.className = '';
+            if (theme !== 'dark') document.body.classList.add(theme);
+            document.querySelectorAll('.theme-opt').forEach(el => {
+                el.classList.toggle('selected', el.dataset.theme === theme);
+            });
+        }
+
+        themeBtn.onclick = () => themeModal.classList.remove('hidden');
+        themeOkBtn.onclick = () => themeModal.classList.add('hidden');
+
+        document.querySelectorAll('.theme-opt').forEach(el => {
+            el.onclick = () => {
+                localStorage.setItem('theme', el.dataset.theme);
+                applyTheme();
+            };
+        });
 
         // ===== Age Gate =====
         function checkAgeGate() {
@@ -1159,56 +1311,39 @@
         };
 
         ageDenyBtn.onclick = () => {
-            document.body.innerHTML = `
-                <div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#0a0a0f;color:white;font-family:sans-serif;text-align:center;padding:20px;">
-                    <div>
-                        <div style="font-size:72px;margin-bottom:20px;">🚫</div>
-                        <h1 style="font-size:24px;margin-bottom:12px;">Access Denied</h1>
-                        <p style="color:#9ca3af;font-size:14px;max-width:320px;">You must be 18 or older to use this service. Please close this tab.</p>
-                    </div>
-                </div>
-            `;
+            document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#0a0a0f;color:white;font-family:sans-serif;text-align:center;padding:20px;"><div><div style="font-size:72px;margin-bottom:20px;">🚫</div><h1>Access Denied</h1><p style="color:#9ca3af;margin-top:12px;">You must be 18+ to use this service.</p></div></div>';
         };
 
-        // ===== Tag Selector =====
+        // ===== Help =====
+        helpBtn.onclick = () => safetyModal.classList.remove('hidden');
+        safetyOkBtn.onclick = () => safetyModal.classList.add('hidden');
+
+        // ===== Tag =====
         tagSelector.addEventListener('click', (e) => {
             const chip = e.target.closest('.tag-chip');
             if (!chip) return;
-            if (isConnected || isSearching) {
-                showToast('Stop current chat first', 1500, 'error');
-                return;
-            }
+            if (isConnected || isSearching) { showToast('Stop current chat first', 1500, 'error'); return; }
             document.querySelectorAll('.tag-chip').forEach(c => c.classList.remove('active'));
             chip.classList.add('active');
             selectedTag = chip.dataset.tag;
             showToast(`Tag: ${chip.textContent.trim()}`, 1200);
         });
 
-        // ===== Help =====
-        helpBtn.onclick = () => safetyModal.classList.remove('hidden');
-        safetyOkBtn.onclick = () => safetyModal.classList.add('hidden');
-
         // ===== TURN =====
         async function fetchIceServers() {
             const cached = sessionStorage.getItem('iceServers');
             if (cached) { try { return JSON.parse(cached); } catch(e) {} }
-
-            const fallback = [
-                { urls: 'stun:stun.l.google.com:19302' },
-                { urls: 'stun:stun1.l.google.com:19302' }
-            ];
-
+            const fb = [{ urls: 'stun:stun.l.google.com:19302' }, { urls: 'stun:stun1.l.google.com:19302' }];
             try {
-                const url = `https://${METERED_APP_NAME}.metered.live/api/v1/turn/credentials?apiKey=${METERED_API_KEY}`;
-                const resp = await fetch(url);
-                if (!resp.ok) throw new Error(`TURN fetch failed: ${resp.status}`);
+                const resp = await fetch(`https://${METERED_APP_NAME}.metered.live/api/v1/turn/credentials?apiKey=${METERED_API_KEY}`);
+                if (!resp.ok) throw new Error(resp.status);
                 const servers = await resp.json();
-                console.log('✅ TURN servers loaded:', servers.length, 'entries');
                 sessionStorage.setItem('iceServers', JSON.stringify(servers));
+                console.log('✅ TURN loaded:', servers.length);
                 return servers;
-            } catch (err) {
-                console.warn('⚠️ TURN fetch failed, STUN only:', err);
-                return fallback;
+            } catch (e) {
+                console.warn('⚠️ TURN failed:', e);
+                return fb;
             }
         }
 
@@ -1236,17 +1371,51 @@
         }
 
         function showPlaceholder(show, text) {
-            if (show) {
-                videoPlaceholder.classList.remove('hidden');
-                if (text) placeholderText.textContent = text;
-            } else {
-                videoPlaceholder.classList.add('hidden');
-            }
+            if (show) { videoPlaceholder.classList.remove('hidden'); if (text) placeholderText.textContent = text; }
+            else videoPlaceholder.classList.add('hidden');
         }
 
         function showMatchCelebration() {
             matchCelebration.classList.add('show');
             setTimeout(() => matchCelebration.classList.remove('show'), 1500);
+        }
+
+        function startTimer() {
+            sessionStart = Date.now();
+            timerPill.classList.add('active');
+            clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                const elapsed = Math.floor((Date.now() - sessionStart) / 1000);
+                const m = String(Math.floor(elapsed / 60)).padStart(2, '0');
+                const s = String(elapsed % 60).padStart(2, '0');
+                timerPill.textContent = `${m}:${s}`;
+            }, 1000);
+        }
+
+        function stopTimer() {
+            clearInterval(timerInterval);
+            timerPill.classList.remove('active');
+            timerPill.textContent = '00:00';
+            sessionStart = null;
+        }
+
+        // ===== Speaking Detection =====
+        function setupSpeakingDetection(stream) {
+            try {
+                if (!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const source = audioContext.createMediaStreamSource(stream);
+                analyser = audioContext.createAnalyser();
+                analyser.fftSize = 512;
+                source.connect(analyser);
+                const data = new Uint8Array(analyser.frequencyBinCount);
+                clearInterval(speakCheckInterval);
+                speakCheckInterval = setInterval(() => {
+                    if (!analyser) return;
+                    analyser.getByteFrequencyData(data);
+                    const avg = data.reduce((a, b) => a + b, 0) / data.length;
+                    selfVideoWrapper.classList.toggle('speaking', avg > 30 && micEnabled);
+                }, 200);
+            } catch (e) { console.warn('Speaking detect failed:', e); }
         }
 
         // ===== Chat =====
@@ -1269,9 +1438,7 @@
             if (unreadCount > 0) {
                 chatBadge.textContent = unreadCount > 9 ? '9+' : unreadCount;
                 chatBadge.classList.add('show');
-            } else {
-                chatBadge.classList.remove('show');
-            }
+            } else chatBadge.classList.remove('show');
         }
 
         function toggleChat() {
@@ -1279,9 +1446,7 @@
             if (!chatArea.classList.contains('collapsed')) {
                 unreadCount = 0;
                 updateBadge();
-                if (dataChannel && dataChannel.readyState === 'open') {
-                    setTimeout(() => chatInput.focus(), 300);
-                }
+                if (dataChannel && dataChannel.readyState === 'open') setTimeout(() => chatInput.focus(), 300);
             }
             emojiPicker.classList.remove('show');
         }
@@ -1294,18 +1459,12 @@
         function sendChatMessage() {
             const text = chatInput.value.trim();
             if (!text) return;
-            if (!dataChannel || dataChannel.readyState !== 'open') {
-                showToast('Chat not connected', 1500, 'error');
-                return;
-            }
+            if (!dataChannel || dataChannel.readyState !== 'open') { showToast('Chat not connected', 1500, 'error'); return; }
             const check = filterMessage(text);
-            if (!check.ok) {
-                showToast(check.reason, 2500, 'error');
-                addWarningMessage(check.reason);
-                return;
-            }
+            if (!check.ok) { showToast(check.reason, 2500, 'error'); addWarningMessage(check.reason); return; }
             dataChannel.send(JSON.stringify({ type: 'chat', text: text }));
             addMessage(text, 'me');
+            socket.emit('chat_log', { room: currentRoom, text: text });
             chatInput.value = '';
             chatInput.focus();
             emojiPicker.classList.remove('show');
@@ -1322,10 +1481,10 @@
         // ===== DataChannel =====
         function setupDataChannel(channel) {
             dataChannel = channel;
-            dataChannel.onopen = () => { enableChat(true); addSystemMessage('🟢 Connected to a stranger'); };
+            dataChannel.onopen = () => { enableChat(true); addSystemMessage('🟢 Connected'); };
             dataChannel.onclose = () => {
                 enableChat(false);
-                addSystemMessage('🔴 Stranger disconnected');
+                addSystemMessage('🔴 Disconnected');
                 typingIndicator.classList.remove('active');
             };
             dataChannel.onmessage = (event) => {
@@ -1333,43 +1492,38 @@
                     const msg = JSON.parse(event.data);
                     if (msg.type === 'chat') {
                         const check = filterMessage(msg.text);
-                        if (check.ok) {
-                            addMessage(msg.text, 'them');
-                            playMessageSound();
-                            vibrate(30);
-                        } else {
-                            addWarningMessage('🚫 A message was blocked by the safety filter');
-                        }
+                        if (check.ok) { addMessage(msg.text, 'them'); playMessageSound(); vibrate(30); }
+                        else addWarningMessage('🚫 A message was blocked');
                     } else if (msg.type === 'typing') {
                         typingIndicator.classList.add('active');
                         clearTimeout(typingTimeout);
                         typingTimeout = setTimeout(() => typingIndicator.classList.remove('active'), 2000);
                     }
-                } catch (e) { console.error('Chat parse error:', e); }
+                } catch (e) {}
             };
         }
 
         // ===== Permissions =====
         async function requestPermissions() {
             try {
-                setStatus('Requesting camera/mic...', 'searching');
-                const constraints = {
+                setStatus('Requesting access...', 'searching');
+                localStream = await navigator.mediaDevices.getUserMedia({
                     video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: isMobile ? currentCamera : undefined },
                     audio: { echoCancellation: true, noiseSuppression: true }
-                };
-                localStream = await navigator.mediaDevices.getUserMedia(constraints);
+                });
                 localVideo.srcObject = localStream;
                 welcomeModal.classList.add('hidden');
                 setStatus('Ready to chat', 'success');
                 startBtn.disabled = false;
                 showPlaceholder(true, 'Pick a tag, then tap 📞');
                 if (isMobile) switchCamBtn.classList.add('visible');
-                showToast('Camera and mic ready!', 2000, 'success');
+                ['muteStrangerBtn','mirrorBtn','screenshotBtn','qualityBtn'].forEach(id => document.getElementById(id).classList.add('visible'));
+                showToast('Ready!', 2000, 'success');
+                setupSpeakingDetection(localStream);
                 return true;
             } catch (err) {
-                console.error('Permission error:', err);
                 let msg = 'Camera/Mic access required. ';
-                if (err.name === 'NotAllowedError') msg += 'Allow access in browser settings.';
+                if (err.name === 'NotAllowedError') msg += 'Allow access in settings.';
                 else if (err.name === 'NotFoundError') msg += 'No camera/mic found.';
                 setStatus(msg, 'error');
                 showToast(msg, 5000, 'error');
@@ -1401,93 +1555,130 @@
             if (!localStream || !isMobile) return;
             currentCamera = currentCamera === 'user' ? 'environment' : 'user';
             try {
-                const videoTrack = localStream.getVideoTracks()[0];
-                if (videoTrack) videoTrack.stop();
-                localStream.getVideoTracks().forEach(t => localStream.removeTrack(t));
-
-                const newStream = await navigator.mediaDevices.getUserMedia({
-                    video: { facingMode: currentCamera },
-                    audio: false
-                });
-                const newVideoTrack = newStream.getVideoTracks()[0];
-                localStream.addTrack(newVideoTrack);
+                localStream.getVideoTracks().forEach(t => { t.stop(); localStream.removeTrack(t); });
+                const newStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: currentCamera }, audio: false });
+                const newTrack = newStream.getVideoTracks()[0];
+                localStream.addTrack(newTrack);
                 localVideo.srcObject = localStream;
                 localVideo.style.transform = currentCamera === 'user' ? 'scaleX(-1)' : 'scaleX(1)';
-
                 if (peerConnection) {
                     const sender = peerConnection.getSenders().find(s => s.track && s.track.kind === 'video');
-                    if (sender) await sender.replaceTrack(newVideoTrack);
+                    if (sender) await sender.replaceTrack(newTrack);
                 }
                 showToast(currentCamera === 'user' ? 'Front camera' : 'Back camera', 1500);
             } catch (e) {
-                console.error('Camera switch error:', e);
                 showToast('Cannot switch camera', 1500, 'error');
             }
+        }
+
+        function toggleMuteStranger() {
+            if (!remoteVideo.srcObject) return;
+            strangerMuted = !strangerMuted;
+            remoteVideo.srcObject.getAudioTracks().forEach(t => t.enabled = !strangerMuted);
+            muteStrangerBtn.classList.toggle('active', strangerMuted);
+            muteStrangerBtn.innerHTML = strangerMuted ? '🔊' : '🔇';
+            showToast(strangerMuted ? 'Stranger muted' : 'Stranger unmuted', 1200);
+        }
+
+        function toggleMirror() {
+            remoteMirrored = !remoteMirrored;
+            remoteVideo.classList.toggle('mirrored', remoteMirrored);
+            mirrorBtn.classList.toggle('active', remoteMirrored);
+            showToast(remoteMirrored ? 'Mirrored' : 'Normal', 1000);
+        }
+
+        function takeScreenshot() {
+            if (!remoteVideo.srcObject || !remoteVideo.videoWidth) { showToast('No video', 1500, 'error'); return; }
+            try {
+                const canvas = document.createElement('canvas');
+                canvas.width = remoteVideo.videoWidth;
+                canvas.height = remoteVideo.videoHeight;
+                const ctx = canvas.getContext('2d');
+                if (remoteMirrored) { ctx.translate(canvas.width, 0); ctx.scale(-1, 1); }
+                ctx.drawImage(remoteVideo, 0, 0);
+                const link = document.createElement('a');
+                link.download = `chat-${Date.now()}.png`;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+                showToast('Screenshot saved', 2000, 'success');
+                vibrate(30);
+            } catch (e) { showToast('Screenshot failed', 1500, 'error'); }
+        }
+
+        function cycleQuality() {
+            if (!peerConnection) { showToast('Not in call', 1200); return; }
+            const qualities = [
+                { label: 'High (720p)', width: 1280, height: 720 },
+                { label: 'Medium (480p)', width: 854, height: 480 },
+                { label: 'Low (360p)', width: 640, height: 360 }
+            ];
+            const current = localStorage.getItem('qualityIndex') || '0';
+            const next = (parseInt(current) + 1) % qualities.length;
+            localStorage.setItem('qualityIndex', next.toString());
+            const q = qualities[next];
+            localStream.getVideoTracks().forEach(track => {
+                try { track.applyConstraints({ width: q.width, height: q.height }); } catch (e) {}
+            });
+            showToast(q.label, 1500);
         }
 
         // ===== WebRTC =====
         async function createPeerConnection(isInitiator) {
             if (peerConnection) peerConnection.close();
             peerConnection = new RTCPeerConnection(rtcConfig);
-            localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
-
+            localStream.getTracks().forEach(t => peerConnection.addTrack(t, localStream));
             if (isInitiator) {
-                const channel = peerConnection.createDataChannel('chat', { ordered: true });
-                setupDataChannel(channel);
+                const ch = peerConnection.createDataChannel('chat', { ordered: true });
+                setupDataChannel(ch);
             } else {
-                peerConnection.ondatachannel = (event) => setupDataChannel(event.channel);
+                peerConnection.ondatachannel = (e) => setupDataChannel(e.channel);
             }
-
             peerConnection.ontrack = (event) => {
                 if (event.streams && event.streams[0]) {
                     remoteVideo.srcObject = event.streams[0];
                     remoteVideo.classList.remove('blurred');
                     showPlaceholder(false);
                     setStatus('Connected', 'success');
-                    showToast('Connected!', 2000, 'success');
+                    startTimer();
                     playMatchSound();
                     vibrate([50, 100, 50]);
                 }
             };
-
             peerConnection.onicecandidate = (event) => {
-                if (event.candidate && currentRoom) {
-                    socket.emit('signal', { room: currentRoom, signal: event.candidate });
-                }
+                if (event.candidate && currentRoom) socket.emit('signal', { room: currentRoom, signal: event.candidate });
             };
-
             peerConnection.onconnectionstatechange = () => {
                 const st = peerConnection.connectionState;
                 if (st === 'connected') isConnected = true;
-                else if (st === 'disconnected' || st === 'failed') {
-                    setStatus('Stranger disconnected', 'error');
-                    endCall();
-                }
+                else if (st === 'disconnected' || st === 'failed') { setStatus('Disconnected', 'error'); endCall(); }
             };
-
             return peerConnection;
         }
 
         // ===== Socket =====
         socket.on('connect', () => {
-            console.log('Socket connected');
-            if (!localStream) setStatus('Welcome — allow camera to start');
+            if (!localStream) setStatus('Welcome — allow camera');
+        });
+
+        socket.on('banned', (data) => {
+            banReason.textContent = data.reason || 'You have been banned.';
+            bannedModal.classList.remove('hidden');
+            setTimeout(() => socket.disconnect(), 100);
         });
 
         socket.on('waiting', () => {
             setStatus('Searching...', 'searching');
-            showPlaceholder(true, 'Searching for someone...');
+            showPlaceholder(true, 'Looking for someone...');
         });
 
         socket.on('matched', async (data) => {
             currentRoom = data.room;
             isSearching = false;
-            setStatus('Match found! Connecting...', 'searching');
+            setStatus('Match found!', 'searching');
             showPlaceholder(true, 'Connecting...');
             startBtn.disabled = true;
             endBtn.disabled = false;
             reportBtn.disabled = false;
-
             chatMessages.innerHTML = '';
             unreadCount = 0;
             updateBadge();
@@ -1495,9 +1686,7 @@
             enableChat(false);
             chatArea.classList.remove('collapsed');
             showMatchCelebration();
-
             await createPeerConnection(data.initiator);
-
             if (data.initiator) {
                 const offer = await peerConnection.createOffer();
                 await peerConnection.setLocalDescription(offer);
@@ -1519,29 +1708,23 @@
                 } else if (signal.candidate) {
                     await peerConnection.addIceCandidate(new RTCIceCandidate(signal));
                 }
-            } catch (err) { console.error('Signal error:', err); }
+            } catch (e) {}
         });
 
         socket.on('partner_left', () => {
             setStatus('Stranger left', 'error');
-            showToast('Stranger left the chat', 2000, 'error');
+            showToast('Stranger left', 2000, 'error');
             cleanupAfterPartnerLeft();
         });
 
-        socket.on('report_confirmed', () => showToast('Report submitted. Thank you!', 3000, 'success'));
-        socket.on('reported', () => {
-            showToast('Session ended', 2000, 'error');
-            cleanupAfterPartnerLeft();
-        });
+        socket.on('report_confirmed', () => showToast('Report submitted. Thanks!', 3000, 'success'));
+        socket.on('reported', () => { showToast('Session ended', 2000, 'error'); cleanupAfterPartnerLeft(); });
 
         function cleanupAfterPartnerLeft() {
             if (dataChannel) { try { dataChannel.close(); } catch(e) {} dataChannel = null; }
             if (peerConnection) { peerConnection.close(); peerConnection = null; }
             remoteVideo.classList.add('blurred');
-            setTimeout(() => {
-                remoteVideo.srcObject = null;
-                remoteVideo.classList.remove('blurred');
-            }, 300);
+            setTimeout(() => { remoteVideo.srcObject = null; remoteVideo.classList.remove('blurred'); }, 300);
             isConnected = false;
             isSearching = false;
             currentRoom = null;
@@ -1552,7 +1735,13 @@
             enableChat(false);
             typingIndicator.classList.remove('active');
             emojiPicker.classList.remove('show');
-            showPlaceholder(true, 'Tap 📞 to find a new stranger');
+            speakingIndicator.classList.remove('active');
+            strangerMuted = false;
+            remoteMirrored = false;
+            muteStrangerBtn.classList.remove('active');
+            mirrorBtn.classList.remove('active');
+            stopTimer();
+            showPlaceholder(true, 'Tap 📞 to find someone new');
             setStatus('Ready to chat');
         }
 
@@ -1582,23 +1771,13 @@
             cleanupAfterPartnerLeft();
         };
 
-        reportCancelBtn.onclick = () => {
-            reportModal.classList.add('hidden');
-            selectedReportReason = null;
-        };
-
-        reportThanksOk.onclick = () => {
-            reportThanksModal.classList.add('hidden');
-            startSearching();
-        };
+        reportCancelBtn.onclick = () => { reportModal.classList.add('hidden'); selectedReportReason = null; };
+        reportThanksOk.onclick = () => { reportThanksModal.classList.add('hidden'); startSearching(); };
 
         // ===== Main =====
         async function startSearching() {
             if (isSearching || isConnected) return;
-            if (!localStream) {
-                const ok = await requestPermissions();
-                if (!ok) return;
-            }
+            if (!localStream) { const ok = await requestPermissions(); if (!ok) return; }
             isSearching = true;
             startBtn.disabled = true;
             startBtn.innerHTML = '⏳';
@@ -1614,21 +1793,16 @@
 
         // ===== Drag =====
         (function makeDraggable() {
-            let isDragging = false;
-            let startX, startY, initialX, initialY;
-
+            let isDragging = false, startX, startY, initialX, initialY;
             selfVideoWrapper.addEventListener('mousedown', startDrag);
             selfVideoWrapper.addEventListener('touchstart', startDrag, { passive: true });
-
             function startDrag(e) {
                 isDragging = true;
                 selfVideoWrapper.classList.add('dragging');
                 const touch = e.touches ? e.touches[0] : e;
-                startX = touch.clientX;
-                startY = touch.clientY;
+                startX = touch.clientX; startY = touch.clientY;
                 const rect = selfVideoWrapper.getBoundingClientRect();
-                initialX = rect.left;
-                initialY = rect.top;
+                initialX = rect.left; initialY = rect.top;
                 selfVideoWrapper.style.position = 'fixed';
                 selfVideoWrapper.style.left = initialX + 'px';
                 selfVideoWrapper.style.top = initialY + 'px';
@@ -1638,23 +1812,18 @@
                 document.addEventListener('mouseup', stopDrag);
                 document.addEventListener('touchend', stopDrag);
             }
-
             function onDrag(e) {
                 if (!isDragging) return;
                 e.preventDefault();
                 const touch = e.touches ? e.touches[0] : e;
-                const dx = touch.clientX - startX;
-                const dy = touch.clientY - startY;
-                let newX = initialX + dx;
-                let newY = initialY + dy;
-                const w = selfVideoWrapper.offsetWidth;
-                const h = selfVideoWrapper.offsetHeight;
+                const dx = touch.clientX - startX, dy = touch.clientY - startY;
+                let newX = initialX + dx, newY = initialY + dy;
+                const w = selfVideoWrapper.offsetWidth, h = selfVideoWrapper.offsetHeight;
                 newX = Math.max(8, Math.min(window.innerWidth - w - 8, newX));
                 newY = Math.max(8, Math.min(window.innerHeight - h - 8, newY));
                 selfVideoWrapper.style.left = newX + 'px';
                 selfVideoWrapper.style.top = newY + 'px';
             }
-
             function stopDrag() {
                 isDragging = false;
                 selfVideoWrapper.classList.remove('dragging');
@@ -1665,7 +1834,7 @@
             }
         })();
 
-        // ===== Event Listeners =====
+        // ===== Events =====
         requestPermissionBtn.onclick = requestPermissions;
         startBtn.onclick = startSearching;
         endBtn.onclick = endCall;
@@ -1674,21 +1843,26 @@
         switchCamBtn.onclick = switchCamera;
         chatToggleBtn.onclick = toggleChat;
         chatSendBtn.onclick = sendChatMessage;
-        emojiBtn.onclick = (e) => {
-            e.stopPropagation();
-            emojiPicker.classList.toggle('show');
-        };
+        muteStrangerBtn.onclick = toggleMuteStranger;
+        mirrorBtn.onclick = toggleMirror;
+        screenshotBtn.onclick = takeScreenshot;
+        qualityBtn.onclick = cycleQuality;
 
+        emojiBtn.onclick = (e) => { e.stopPropagation(); emojiPicker.classList.toggle('show'); };
         document.addEventListener('click', (e) => {
-            if (!emojiPicker.contains(e.target) && e.target !== emojiBtn) {
-                emojiPicker.classList.remove('show');
-            }
+            if (!emojiPicker.contains(e.target) && e.target !== emojiBtn) emojiPicker.classList.remove('show');
         });
 
-        chatInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') sendChatMessage();
-        });
+        chatInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') sendChatMessage(); });
         chatInput.addEventListener('input', sendTypingIndicator);
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.target.tagName === 'INPUT') return;
+            if (e.code === 'Space' && !e.repeat) { e.preventDefault(); toggleMicrophone(); }
+            else if (e.key === 'n' || e.key === 'N') { if (isConnected) { endCall(); setTimeout(startSearching, 400); } }
+            else if (e.key === 'Escape') { if (isConnected) endCall(); }
+        });
 
         window.addEventListener('beforeunload', () => {
             if (localStream) localStream.getTracks().forEach(t => t.stop());
@@ -1699,18 +1873,19 @@
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
             setStatus('Browser not supported', 'error');
             requestPermissionBtn.disabled = true;
-            requestPermissionBtn.textContent = '❌ Browser not supported';
+            requestPermissionBtn.textContent = '❌ Not supported';
         }
 
         addSystemMessage('👋 Welcome! Pick a tag and tap 📞');
 
         // ===== Init =====
         (async function init() {
+            applyTheme();
             checkAgeGate();
             initEmojiPicker();
-            setStatus('Loading TURN servers...');
+            setStatus('Loading TURN...');
             rtcConfig = await buildRtcConfig();
-            console.log('RTC config ready:', rtcConfig);
+            console.log('Ready');
         })();
     </script>
 </body>
