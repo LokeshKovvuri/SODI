@@ -4,7 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover, maximum-scale=1.0">
     <meta name="description" content="Random Video Chat - Connect with strangers worldwide">
-    <meta name="theme-color" content="#000000">
+    <meta name="theme-color" content="#667eea">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="/static/icons/icon-192.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="RandomChat">
     <title>Random Video Chat</title>
     <style>
         * {
@@ -38,7 +43,7 @@
             overflow: hidden;
         }
 
-        /* ===== Top Status Bar ===== */
+        /* ===== Top Bar ===== */
         .top-bar {
             padding: 10px 12px;
             padding-top: calc(10px + env(safe-area-inset-top));
@@ -79,20 +84,10 @@
             flex-shrink: 0;
         }
 
-        .status-dot.connected {
-            background: #10b981;
-            box-shadow: 0 0 8px #10b981;
-        }
+        .status-dot.connected { background: #10b981; box-shadow: 0 0 8px #10b981; }
+        .status-dot.searching { background: #fbbf24; animation: blink 1s ease-in-out infinite; }
 
-        .status-dot.searching {
-            background: #fbbf24;
-            animation: blink 1s ease-in-out infinite;
-        }
-
-        @keyframes blink {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.3; }
-        }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
 
         .help-btn {
             width: 32px;
@@ -111,6 +106,45 @@
         }
 
         .help-btn:active { background: rgba(255,255,255,0.18); }
+
+        /* ===== Tag Selector ===== */
+        .tag-selector {
+            padding: 8px 12px;
+            display: flex;
+            gap: 6px;
+            overflow-x: auto;
+            overflow-y: hidden;
+            background: #0a0a0f;
+            scrollbar-width: none;
+            flex-shrink: 0;
+            border-top: 1px solid rgba(255,255,255,0.04);
+        }
+
+        .tag-selector::-webkit-scrollbar { display: none; }
+
+        .tag-chip {
+            flex-shrink: 0;
+            padding: 7px 14px;
+            border-radius: 20px;
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: rgba(255,255,255,0.75);
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.15s;
+            font-family: inherit;
+            white-space: nowrap;
+        }
+
+        .tag-chip:active { transform: scale(0.95); }
+
+        .tag-chip.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-color: transparent;
+            color: white;
+            box-shadow: 0 2px 10px rgba(102,126,234,0.4);
+        }
 
         /* ===== Video Area ===== */
         .video-area {
@@ -220,6 +254,43 @@
             backdrop-filter: blur(5px);
         }
 
+        /* ===== Match celebration ===== */
+        .match-celebration {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .match-celebration.show {
+            opacity: 1;
+            animation: matchFade 1.5s ease forwards;
+        }
+
+        @keyframes matchFade {
+            0% { opacity: 0; transform: scale(0.8); }
+            20% { opacity: 1; transform: scale(1); }
+            80% { opacity: 1; transform: scale(1); }
+            100% { opacity: 0; transform: scale(1.1); }
+        }
+
+        .match-celebration-inner {
+            background: rgba(0,0,0,0.75);
+            backdrop-filter: blur(10px);
+            padding: 24px 32px;
+            border-radius: 20px;
+            text-align: center;
+            border: 2px solid rgba(102,126,234,0.5);
+        }
+
+        .match-celebration-inner .emoji { font-size: 56px; margin-bottom: 8px; }
+        .match-celebration-inner .text { font-size: 18px; font-weight: 700; }
+
         /* ===== Chat Area ===== */
         .chat-area {
             flex-shrink: 0;
@@ -232,12 +303,7 @@
             transition: max-height 0.3s ease;
         }
 
-        .chat-area.collapsed {
-            max-height: 0;
-            min-height: 0;
-            overflow: hidden;
-            border-top: none;
-        }
+        .chat-area.collapsed { max-height: 0; min-height: 0; overflow: hidden; border-top: none; }
 
         .chat-messages {
             flex: 1;
@@ -345,6 +411,7 @@
             background: rgba(255,255,255,0.03);
             border-top: 1px solid rgba(255,255,255,0.08);
             flex-shrink: 0;
+            align-items: center;
         }
 
         .chat-input-row input {
@@ -368,6 +435,24 @@
         .chat-input-row input::placeholder { color: rgba(255,255,255,0.4); }
         .chat-input-row input:disabled { opacity: 0.5; cursor: not-allowed; }
 
+        .emoji-btn {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.08);
+            border: none;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: transform 0.15s;
+        }
+
+        .emoji-btn:active { transform: scale(0.9); }
+
         .chat-send-btn {
             width: 42px;
             height: 42px;
@@ -386,6 +471,46 @@
 
         .chat-send-btn:active { transform: scale(0.9); }
         .chat-send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+        /* ===== Emoji Picker ===== */
+        .emoji-picker {
+            position: absolute;
+            bottom: 120px;
+            left: 12px;
+            right: 12px;
+            background: #1a1a24;
+            border-radius: 16px;
+            padding: 10px;
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 4px;
+            max-height: 220px;
+            overflow-y: auto;
+            z-index: 100;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.7);
+            border: 1px solid rgba(255,255,255,0.1);
+            transform: translateY(20px);
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.2s;
+        }
+
+        .emoji-picker.show {
+            transform: translateY(0);
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .emoji-picker span {
+            font-size: 22px;
+            text-align: center;
+            padding: 6px 0;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: background 0.15s;
+        }
+
+        .emoji-picker span:active { background: rgba(255,255,255,0.15); }
 
         /* ===== Bottom Controls ===== */
         .bottom-controls {
@@ -418,15 +543,9 @@
             flex-shrink: 0;
         }
 
-        .circle-btn:active {
-            transform: scale(0.92);
-            background: rgba(255,255,255,0.18);
-        }
+        .circle-btn:active { transform: scale(0.92); background: rgba(255,255,255,0.18); }
 
-        .circle-btn.off {
-            background: rgba(220,38,38,0.7);
-            border-color: rgba(220,38,38,0.5);
-        }
+        .circle-btn.off { background: rgba(220,38,38,0.7); border-color: rgba(220,38,38,0.5); }
 
         .circle-btn.primary {
             width: 56px;
@@ -437,28 +556,16 @@
             box-shadow: 0 4px 16px rgba(102,126,234,0.4);
         }
 
-        .circle-btn.primary:active {
-            box-shadow: 0 2px 8px rgba(102,126,234,0.6);
-        }
+        .circle-btn.primary:active { box-shadow: 0 2px 8px rgba(102,126,234,0.6); }
 
-        .circle-btn.danger {
-            background: rgba(220,38,38,0.8);
-            border: none;
-        }
-
-        .circle-btn.report {
-            background: rgba(220,38,38,0.15);
-            border-color: rgba(220,38,38,0.4);
-        }
-
+        .circle-btn.danger { background: rgba(220,38,38,0.8); border: none; }
+        .circle-btn.report { background: rgba(220,38,38,0.15); border-color: rgba(220,38,38,0.4); }
         .circle-btn.report:active { background: rgba(220,38,38,0.5); }
-
-        .circle-btn:disabled {
-            opacity: 0.35;
-            cursor: not-allowed;
-        }
-
+        .circle-btn:disabled { opacity: 0.35; cursor: not-allowed; }
         .circle-btn:disabled:active { transform: none; }
+
+        .switch-cam-btn { display: none; }
+        .switch-cam-btn.visible { display: flex; }
 
         .badge {
             position: absolute;
@@ -515,17 +622,8 @@
             to { transform: translateY(0); opacity: 1; }
         }
 
-        .modal-content h2 {
-            margin-bottom: 12px;
-            font-size: 22px;
-        }
-
-        .modal-content > p {
-            margin-bottom: 16px;
-            color: #666;
-            line-height: 1.5;
-            font-size: 14px;
-        }
+        .modal-content h2 { margin-bottom: 12px; font-size: 22px; }
+        .modal-content > p { margin-bottom: 16px; color: #666; line-height: 1.5; font-size: 14px; }
 
         .feature-list {
             text-align: left;
@@ -556,20 +654,11 @@
         }
 
         .btn-modal:active { transform: scale(0.97); }
-
-        .btn-modal.secondary {
-            background: #f3f4f6;
-            color: #333;
-            margin-top: 6px;
-        }
-
+        .btn-modal.secondary { background: #f3f4f6; color: #333; margin-top: 6px; }
         .btn-modal.danger { background: #dc2626; }
         .btn-modal:disabled { opacity: 0.5; cursor: not-allowed; }
 
-        .age-icon {
-            font-size: 56px;
-            margin-bottom: 8px;
-        }
+        .age-icon { font-size: 56px; margin-bottom: 8px; }
 
         .age-warning {
             background: #fef2f2;
@@ -637,26 +726,55 @@
             to { opacity: 1; transform: translateX(-50%) translateY(0); }
         }
 
+        /* ===== Install Banner ===== */
+        .install-banner {
+            position: fixed;
+            bottom: 100px;
+            left: 12px;
+            right: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 16px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            z-index: 1500;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.6);
+            transform: translateY(200px);
+            transition: transform 0.3s;
+        }
+
+        .install-banner.show { transform: translateY(0); }
+        .install-banner .icon { font-size: 28px; flex-shrink: 0; }
+        .install-banner .text { flex: 1; font-size: 13px; line-height: 1.3; }
+        .install-banner .text strong { display: block; font-size: 14px; margin-bottom: 2px; }
+        .install-banner button {
+            background: white;
+            color: #667eea;
+            border: none;
+            padding: 8px 14px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 12px;
+            cursor: pointer;
+            flex-shrink: 0;
+            font-family: inherit;
+        }
+        .install-banner .close-x {
+            background: transparent;
+            color: white;
+            padding: 4px;
+            font-size: 18px;
+            cursor: pointer;
+            border: none;
+        }
+
         /* ===== Desktop ===== */
         @media (min-width: 900px) {
-            .app {
-                max-width: 1400px;
-                margin: 0 auto;
-                flex-direction: row;
-            }
-
-            .video-area {
-                flex: 2;
-                border-right: 1px solid rgba(255,255,255,0.08);
-            }
-
-            .self-video-wrapper {
-                width: 140px;
-                height: 200px;
-                top: 20px;
-                right: 20px;
-            }
-
+            .app { max-width: 1400px; margin: 0 auto; flex-direction: row; }
+            .video-area { flex: 2; border-right: 1px solid rgba(255,255,255,0.08); }
+            .self-video-wrapper { width: 140px; height: 200px; top: 20px; right: 20px; }
             .right-column {
                 flex: 1;
                 display: flex;
@@ -665,7 +783,6 @@
                 max-width: 420px;
                 min-width: 320px;
             }
-
             .top-bar { padding: 16px; }
             .chat-area { flex: 1; max-height: none; min-height: 0; }
             .bottom-controls { padding: 16px 12px; gap: 8px; }
@@ -675,18 +792,8 @@
 
         @media (max-width: 360px) {
             .self-video-wrapper { width: 85px; height: 125px; }
-
-            .circle-btn {
-                width: 38px;
-                height: 38px;
-                font-size: 15px;
-            }
-
-            .circle-btn.primary {
-                width: 50px;
-                height: 50px;
-                font-size: 19px;
-            }
+            .circle-btn { width: 38px; height: 38px; font-size: 15px; }
+            .circle-btn.primary { width: 50px; height: 50px; font-size: 19px; }
         }
 
         @media (orientation: landscape) and (max-height: 500px) {
@@ -702,12 +809,19 @@
 
             <div class="video-placeholder" id="videoPlaceholder">
                 <div class="avatar">👤</div>
-                <div class="placeholder-text" id="placeholderText">Tap 📞 to meet a stranger</div>
+                <div class="placeholder-text" id="placeholderText">Pick a topic, then tap 📞</div>
             </div>
 
             <div class="self-video-wrapper" id="selfVideoWrapper">
                 <video id="localVideo" autoplay muted playsinline></video>
                 <div class="self-label">You</div>
+            </div>
+
+            <div class="match-celebration" id="matchCelebration">
+                <div class="match-celebration-inner">
+                    <div class="emoji">🎉</div>
+                    <div class="text">Match Found!</div>
+                </div>
             </div>
         </div>
 
@@ -720,20 +834,34 @@
                 <button class="help-btn" id="helpBtn" title="Safety Tips">?</button>
             </div>
 
+            <!-- Tag Selector -->
+            <div class="tag-selector" id="tagSelector">
+                <button class="tag-chip active" data-tag="any">🎲 Any</button>
+                <button class="tag-chip" data-tag="music">🎵 Music</button>
+                <button class="tag-chip" data-tag="gaming">🎮 Gaming</button>
+                <button class="tag-chip" data-tag="language">🌍 Language</button>
+                <button class="tag-chip" data-tag="movies">🎬 Movies</button>
+                <button class="tag-chip" data-tag="justchat">💬 Just Chat</button>
+            </div>
+
             <div class="chat-area" id="chatArea">
                 <div class="chat-messages" id="chatMessages"></div>
                 <div class="typing-indicator" id="typingIndicator">
                     Stranger is typing<span class="typing-dots"><span></span><span></span><span></span></span>
                 </div>
                 <div class="chat-input-row">
+                    <button class="emoji-btn" id="emojiBtn" title="Emoji">😊</button>
                     <input type="text" id="chatInput" placeholder="Type a message..." maxlength="500" autocomplete="off" disabled>
                     <button class="chat-send-btn" id="chatSendBtn" disabled>➤</button>
                 </div>
             </div>
 
+            <div class="emoji-picker" id="emojiPicker"></div>
+
             <div class="bottom-controls">
                 <button class="circle-btn" id="toggleMic" title="Toggle Microphone">🎤</button>
                 <button class="circle-btn" id="toggleCam" title="Toggle Camera">📹</button>
+                <button class="circle-btn switch-cam-btn" id="switchCamBtn" title="Switch Camera">🔄</button>
                 <button class="circle-btn primary" id="startBtn" title="Start Chatting">📞</button>
                 <button class="circle-btn" id="chatToggleBtn" title="Toggle Chat">
                     💬
@@ -745,7 +873,18 @@
         </div>
     </div>
 
-    <!-- Age Gate Modal -->
+    <!-- Install Banner -->
+    <div class="install-banner" id="installBanner">
+        <div class="icon">📱</div>
+        <div class="text">
+            <strong>Install App</strong>
+            Add to home screen for the best experience
+        </div>
+        <button id="installBtn">Install</button>
+        <button class="close-x" id="installClose">✕</button>
+    </div>
+
+    <!-- Age Gate -->
     <div class="modal" id="ageModal">
         <div class="modal-content">
             <div class="age-icon">🔞</div>
@@ -772,24 +911,24 @@
                 <li>✅ 100% Anonymous</li>
                 <li>✅ No data storage</li>
                 <li>✅ Video + Text chat</li>
+                <li>✅ Pick your interest tag</li>
                 <li>✅ Works on mobile & desktop</li>
-                <li>✅ Peer-to-peer encrypted</li>
             </ul>
             <p style="font-size: 13px; color: #888; margin-top: 12px;">Please allow camera and microphone access</p>
             <button class="btn-modal" id="requestPermissionBtn">🎥 Allow Access & Start</button>
         </div>
     </div>
 
-    <!-- Safety Tips Modal -->
+    <!-- Safety Tips -->
     <div class="modal hidden" id="safetyModal">
         <div class="modal-content">
             <h2>🛡️ Safety Tips</h2>
             <p>Stay safe while chatting with strangers:</p>
             <ul class="feature-list">
-                <li>🔒 <strong>Never share personal info</strong> — real name, address, phone, social media, or passwords</li>
+                <li>🔒 <strong>Never share personal info</strong> — real name, address, phone, social media</li>
                 <li>📸 <strong>Don't send money or gifts</strong> — no matter what they say</li>
                 <li>👁️ <strong>Be careful with links</strong> — they may be phishing or malware</li>
-                <li>🚨 <strong>Report bad behavior</strong> — use the 🚨 button if someone is inappropriate</li>
+                <li>🚨 <strong>Report bad behavior</strong> — use the 🚨 button</li>
                 <li>✋ <strong>Trust your gut</strong> — if something feels off, click Next</li>
                 <li>🎥 <strong>Anything shown can be recorded</strong> — never show anything you wouldn't want public</li>
                 <li>👶 <strong>No minors allowed</strong> — you must be 18+</li>
@@ -816,7 +955,7 @@
         </div>
     </div>
 
-    <!-- Report Thanks Modal -->
+    <!-- Report Thanks -->
     <div class="modal hidden" id="reportThanksModal">
         <div class="modal-content">
             <div class="age-icon">✅</div>
@@ -831,24 +970,106 @@
         // ============================================================
         // 🔑 TURN SERVER CONFIGURATION — REPLACE THESE TWO VALUES
         // ============================================================
-        const METERED_APP_NAME = "SODI";       // ⬅️ REPLACE THIS
-        const METERED_API_KEY  = "1be2e69bed1737aaef7968d0c1372914c246";   // ⬅️ REPLACE THIS
+        const METERED_APP_NAME = "SODI";       // ⬅️ REPLACE
+        const METERED_API_KEY  = "1be2e69bed1737aaef7968d0c1372914c246";   // ⬅️ REPLACE
         // ============================================================
 
-        // ===== Safety: Text filter rules =====
+        // ===== PWA =====
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js').catch((e) => console.warn('SW failed:', e));
+            });
+        }
+
+        let deferredPrompt = null;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            if (!localStorage.getItem('installBannerDismissed')) {
+                setTimeout(() => document.getElementById('installBanner').classList.add('show'), 3000);
+            }
+        });
+
+        document.getElementById('installBtn').onclick = async () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                await deferredPrompt.userChoice;
+                deferredPrompt = null;
+                document.getElementById('installBanner').classList.remove('show');
+            }
+        };
+
+        document.getElementById('installClose').onclick = () => {
+            document.getElementById('installBanner').classList.remove('show');
+            localStorage.setItem('installBannerDismissed', 'true');
+        };
+
+        // ===== Sounds =====
+        function playMatchSound() {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const notes = [523.25, 659.25, 783.99]; // C5, E5, G5
+                notes.forEach((freq, i) => {
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.value = freq;
+                    gain.gain.setValueAtTime(0.15, ctx.currentTime + i * 0.1);
+                    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + i * 0.1 + 0.3);
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.start(ctx.currentTime + i * 0.1);
+                    osc.stop(ctx.currentTime + i * 0.1 + 0.3);
+                });
+            } catch (e) { console.warn('Sound failed:', e); }
+        }
+
+        function playMessageSound() {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.value = 880;
+                gain.gain.setValueAtTime(0.1, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.15);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start();
+                osc.stop(ctx.currentTime + 0.15);
+            } catch (e) {}
+        }
+
+        function vibrate(pattern) {
+            if (navigator.vibrate) {
+                try { navigator.vibrate(pattern); } catch (e) {}
+            }
+        }
+
+        // ===== Emoji =====
+        const EMOJIS = ['😀','😂','🥰','😍','😎','🤔','😴','🤯','😭','😡','🥳','🤩','😇','🙃','😉','😋','👍','👎','👏','🙏','💪','✌️','🤝','👋','❤️','💔','💯','🔥','✨','⭐','🎉','🎊','🎁','🌈','☀️','🌙','⚡','💧','🌸','🌺','🍕','🍔','🍟','🍦','🎂','☕','🍺','🎮','🎯','🏆','🎵','🎶','📱','💻','🚀','🎬','📷'];
+
+        function initEmojiPicker() {
+            const picker = document.getElementById('emojiPicker');
+            EMOJIS.forEach((emoji) => {
+                const span = document.createElement('span');
+                span.textContent = emoji;
+                span.onclick = () => {
+                    chatInput.value += emoji;
+                    chatInput.focus();
+                };
+                picker.appendChild(span);
+            });
+        }
+
+        // ===== Safety: Text filter =====
         const BLOCKED_URL_PATTERN = /(https?:\/\/|www\.|\.com|\.net|\.org|\.in|\.xyz|\.ru|\.tk|\.ml|\.ga|\.cf)/i;
         const BLOCKED_WORDS = ['kys', 'kill yourself', 'nigger', 'faggot', 'retard'];
 
         function filterMessage(text) {
-            if (BLOCKED_URL_PATTERN.test(text)) {
-                return { ok: false, reason: '🚫 Links are not allowed in chat' };
-            }
+            if (BLOCKED_URL_PATTERN.test(text)) return { ok: false, reason: '🚫 Links are not allowed in chat' };
             const lower = text.toLowerCase();
-            for (const word of BLOCKED_WORDS) {
-                if (lower.includes(word)) {
-                    return { ok: false, reason: '🚫 Message contains blocked content' };
-                }
-            }
+            for (const w of BLOCKED_WORDS) if (lower.includes(w)) return { ok: false, reason: '🚫 Message contains blocked content' };
             return { ok: true };
         }
 
@@ -858,6 +1079,7 @@
         const videoPlaceholder = document.getElementById('videoPlaceholder');
         const placeholderText = document.getElementById('placeholderText');
         const selfVideoWrapper = document.getElementById('selfVideoWrapper');
+        const matchCelebration = document.getElementById('matchCelebration');
 
         const statusPill = document.getElementById('statusPill');
         const statusDot = document.getElementById('statusDot');
@@ -868,6 +1090,7 @@
         const endBtn = document.getElementById('endBtn');
         const toggleMicBtn = document.getElementById('toggleMic');
         const toggleCamBtn = document.getElementById('toggleCam');
+        const switchCamBtn = document.getElementById('switchCamBtn');
         const chatToggleBtn = document.getElementById('chatToggleBtn');
         const chatBadge = document.getElementById('chatBadge');
         const reportBtn = document.getElementById('reportBtn');
@@ -877,6 +1100,9 @@
         const chatInput = document.getElementById('chatInput');
         const chatSendBtn = document.getElementById('chatSendBtn');
         const typingIndicator = document.getElementById('typingIndicator');
+        const emojiBtn = document.getElementById('emojiBtn');
+        const emojiPicker = document.getElementById('emojiPicker');
+        const tagSelector = document.getElementById('tagSelector');
 
         const ageModal = document.getElementById('ageModal');
         const ageConfirmBtn = document.getElementById('ageConfirmBtn');
@@ -911,13 +1137,14 @@
         let lastTypingSent = 0;
         let rtcConfig = null;
         let selectedReportReason = null;
+        let selectedTag = 'any';
+        let currentCamera = 'user';
 
         const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
         // ===== Age Gate =====
         function checkAgeGate() {
-            const ageVerified = localStorage.getItem('ageVerified');
-            if (ageVerified === 'true') {
+            if (localStorage.getItem('ageVerified') === 'true') {
                 ageModal.classList.add('hidden');
                 welcomeModal.classList.remove('hidden');
             } else {
@@ -943,21 +1170,28 @@
             `;
         };
 
+        // ===== Tag Selector =====
+        tagSelector.addEventListener('click', (e) => {
+            const chip = e.target.closest('.tag-chip');
+            if (!chip) return;
+            if (isConnected || isSearching) {
+                showToast('Stop current chat first', 1500, 'error');
+                return;
+            }
+            document.querySelectorAll('.tag-chip').forEach(c => c.classList.remove('active'));
+            chip.classList.add('active');
+            selectedTag = chip.dataset.tag;
+            showToast(`Tag: ${chip.textContent.trim()}`, 1200);
+        });
+
         // ===== Help =====
-        helpBtn.onclick = () => {
-            safetyModal.classList.remove('hidden');
-        };
+        helpBtn.onclick = () => safetyModal.classList.remove('hidden');
+        safetyOkBtn.onclick = () => safetyModal.classList.add('hidden');
 
-        safetyOkBtn.onclick = () => {
-            safetyModal.classList.add('hidden');
-        };
-
-        // ===== TURN: Fetch ICE servers =====
+        // ===== TURN =====
         async function fetchIceServers() {
             const cached = sessionStorage.getItem('iceServers');
-            if (cached) {
-                try { return JSON.parse(cached); } catch(e) {}
-            }
+            if (cached) { try { return JSON.parse(cached); } catch(e) {} }
 
             const fallback = [
                 { urls: 'stun:stun.l.google.com:19302' },
@@ -969,21 +1203,18 @@
                 const resp = await fetch(url);
                 if (!resp.ok) throw new Error(`TURN fetch failed: ${resp.status}`);
                 const servers = await resp.json();
-                console.log('✅ TURN servers loaded from Metered:', servers.length, 'entries');
+                console.log('✅ TURN servers loaded:', servers.length, 'entries');
                 sessionStorage.setItem('iceServers', JSON.stringify(servers));
                 return servers;
             } catch (err) {
-                console.warn('⚠️ TURN fetch failed, using STUN only:', err);
+                console.warn('⚠️ TURN fetch failed, STUN only:', err);
                 return fallback;
             }
         }
 
         async function buildRtcConfig() {
             const iceServers = await fetchIceServers();
-            return {
-                iceServers: iceServers,
-                iceCandidatePoolSize: 10
-            };
+            return { iceServers, iceCandidatePoolSize: 10 };
         }
 
         // ===== Helpers =====
@@ -999,14 +1230,9 @@
             statusText.textContent = text;
             statusPill.classList.remove('error', 'success');
             statusDot.classList.remove('connected', 'searching');
-
             if (type === 'error') statusPill.classList.add('error');
-            else if (type === 'success') {
-                statusPill.classList.add('success');
-                statusDot.classList.add('connected');
-            } else if (type === 'searching') {
-                statusDot.classList.add('searching');
-            }
+            else if (type === 'success') { statusPill.classList.add('success'); statusDot.classList.add('connected'); }
+            else if (type === 'searching') statusDot.classList.add('searching');
         }
 
         function showPlaceholder(show, text) {
@@ -1018,6 +1244,11 @@
             }
         }
 
+        function showMatchCelebration() {
+            matchCelebration.classList.add('show');
+            setTimeout(() => matchCelebration.classList.remove('show'), 1500);
+        }
+
         // ===== Chat =====
         function addMessage(text, type = 'them') {
             const div = document.createElement('div');
@@ -1025,7 +1256,6 @@
             div.textContent = text;
             chatMessages.appendChild(div);
             chatMessages.scrollTop = chatMessages.scrollHeight;
-
             if (type === 'them' && chatArea.classList.contains('collapsed')) {
                 unreadCount++;
                 updateBadge();
@@ -1053,6 +1283,7 @@
                     setTimeout(() => chatInput.focus(), 300);
                 }
             }
+            emojiPicker.classList.remove('show');
         }
 
         function enableChat(enabled) {
@@ -1067,19 +1298,17 @@
                 showToast('Chat not connected', 1500, 'error');
                 return;
             }
-
-            // Apply filter
             const check = filterMessage(text);
             if (!check.ok) {
                 showToast(check.reason, 2500, 'error');
                 addWarningMessage(check.reason);
                 return;
             }
-
             dataChannel.send(JSON.stringify({ type: 'chat', text: text }));
             addMessage(text, 'me');
             chatInput.value = '';
             chatInput.focus();
+            emojiPicker.classList.remove('show');
         }
 
         function sendTypingIndicator() {
@@ -1093,39 +1322,30 @@
         // ===== DataChannel =====
         function setupDataChannel(channel) {
             dataChannel = channel;
-
-            dataChannel.onopen = () => {
-                enableChat(true);
-                addSystemMessage('🟢 Connected to a stranger');
-            };
-
+            dataChannel.onopen = () => { enableChat(true); addSystemMessage('🟢 Connected to a stranger'); };
             dataChannel.onclose = () => {
                 enableChat(false);
                 addSystemMessage('🔴 Stranger disconnected');
                 typingIndicator.classList.remove('active');
             };
-
             dataChannel.onmessage = (event) => {
                 try {
                     const msg = JSON.parse(event.data);
                     if (msg.type === 'chat') {
-                        // Filter incoming too
                         const check = filterMessage(msg.text);
                         if (check.ok) {
                             addMessage(msg.text, 'them');
+                            playMessageSound();
+                            vibrate(30);
                         } else {
                             addWarningMessage('🚫 A message was blocked by the safety filter');
                         }
                     } else if (msg.type === 'typing') {
                         typingIndicator.classList.add('active');
                         clearTimeout(typingTimeout);
-                        typingTimeout = setTimeout(() => {
-                            typingIndicator.classList.remove('active');
-                        }, 2000);
+                        typingTimeout = setTimeout(() => typingIndicator.classList.remove('active'), 2000);
                     }
-                } catch (e) {
-                    console.error('Chat parse error:', e);
-                }
+                } catch (e) { console.error('Chat parse error:', e); }
             };
         }
 
@@ -1134,11 +1354,7 @@
             try {
                 setStatus('Requesting camera/mic...', 'searching');
                 const constraints = {
-                    video: {
-                        width: { ideal: 1280 },
-                        height: { ideal: 720 },
-                        facingMode: isMobile ? 'user' : undefined
-                    },
+                    video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: isMobile ? currentCamera : undefined },
                     audio: { echoCancellation: true, noiseSuppression: true }
                 };
                 localStream = await navigator.mediaDevices.getUserMedia(constraints);
@@ -1146,13 +1362,14 @@
                 welcomeModal.classList.add('hidden');
                 setStatus('Ready to chat', 'success');
                 startBtn.disabled = false;
-                showPlaceholder(true, 'Tap 📞 to start meeting strangers');
+                showPlaceholder(true, 'Pick a tag, then tap 📞');
+                if (isMobile) switchCamBtn.classList.add('visible');
                 showToast('Camera and mic ready!', 2000, 'success');
                 return true;
             } catch (err) {
                 console.error('Permission error:', err);
                 let msg = 'Camera/Mic access required. ';
-                if (err.name === 'NotAllowedError') msg += 'Please allow access in browser settings.';
+                if (err.name === 'NotAllowedError') msg += 'Allow access in browser settings.';
                 else if (err.name === 'NotFoundError') msg += 'No camera/mic found.';
                 setStatus(msg, 'error');
                 showToast(msg, 5000, 'error');
@@ -1167,7 +1384,7 @@
             localStream.getAudioTracks().forEach(t => t.enabled = micEnabled);
             toggleMicBtn.classList.toggle('off', !micEnabled);
             toggleMicBtn.innerHTML = micEnabled ? '🎤' : '🔇';
-            showToast(micEnabled ? 'Mic on' : 'Mic off', 1500);
+            showToast(micEnabled ? 'Mic on' : 'Mic off', 1200);
         }
 
         function toggleCamera() {
@@ -1177,26 +1394,48 @@
             toggleCamBtn.classList.toggle('off', !camEnabled);
             toggleCamBtn.innerHTML = camEnabled ? '📹' : '🚫';
             selfVideoWrapper.classList.toggle('hidden', !camEnabled);
-            showToast(camEnabled ? 'Camera on' : 'Camera off', 1500);
+            showToast(camEnabled ? 'Camera on' : 'Camera off', 1200);
+        }
+
+        async function switchCamera() {
+            if (!localStream || !isMobile) return;
+            currentCamera = currentCamera === 'user' ? 'environment' : 'user';
+            try {
+                const videoTrack = localStream.getVideoTracks()[0];
+                if (videoTrack) videoTrack.stop();
+                localStream.getVideoTracks().forEach(t => localStream.removeTrack(t));
+
+                const newStream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: currentCamera },
+                    audio: false
+                });
+                const newVideoTrack = newStream.getVideoTracks()[0];
+                localStream.addTrack(newVideoTrack);
+                localVideo.srcObject = localStream;
+                localVideo.style.transform = currentCamera === 'user' ? 'scaleX(-1)' : 'scaleX(1)';
+
+                if (peerConnection) {
+                    const sender = peerConnection.getSenders().find(s => s.track && s.track.kind === 'video');
+                    if (sender) await sender.replaceTrack(newVideoTrack);
+                }
+                showToast(currentCamera === 'user' ? 'Front camera' : 'Back camera', 1500);
+            } catch (e) {
+                console.error('Camera switch error:', e);
+                showToast('Cannot switch camera', 1500, 'error');
+            }
         }
 
         // ===== WebRTC =====
         async function createPeerConnection(isInitiator) {
             if (peerConnection) peerConnection.close();
-
             peerConnection = new RTCPeerConnection(rtcConfig);
-
-            localStream.getTracks().forEach(track => {
-                peerConnection.addTrack(track, localStream);
-            });
+            localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
 
             if (isInitiator) {
                 const channel = peerConnection.createDataChannel('chat', { ordered: true });
                 setupDataChannel(channel);
             } else {
-                peerConnection.ondatachannel = (event) => {
-                    setupDataChannel(event.channel);
-                };
+                peerConnection.ondatachannel = (event) => setupDataChannel(event.channel);
             }
 
             peerConnection.ontrack = (event) => {
@@ -1206,6 +1445,8 @@
                     showPlaceholder(false);
                     setStatus('Connected', 'success');
                     showToast('Connected!', 2000, 'success');
+                    playMatchSound();
+                    vibrate([50, 100, 50]);
                 }
             };
 
@@ -1217,9 +1458,8 @@
 
             peerConnection.onconnectionstatechange = () => {
                 const st = peerConnection.connectionState;
-                if (st === 'connected') {
-                    isConnected = true;
-                } else if (st === 'disconnected' || st === 'failed') {
+                if (st === 'connected') isConnected = true;
+                else if (st === 'disconnected' || st === 'failed') {
                     setStatus('Stranger disconnected', 'error');
                     endCall();
                 }
@@ -1228,14 +1468,14 @@
             return peerConnection;
         }
 
-        // ===== Socket handlers =====
+        // ===== Socket =====
         socket.on('connect', () => {
             console.log('Socket connected');
             if (!localStream) setStatus('Welcome — allow camera to start');
         });
 
         socket.on('waiting', () => {
-            setStatus('Searching for stranger...', 'searching');
+            setStatus('Searching...', 'searching');
             showPlaceholder(true, 'Searching for someone...');
         });
 
@@ -1251,10 +1491,10 @@
             chatMessages.innerHTML = '';
             unreadCount = 0;
             updateBadge();
-            addSystemMessage('🔍 Matched! Say hi...');
+            addSystemMessage(`🔍 Matched! Topic: ${data.tag || 'Any'}`);
             enableChat(false);
-
             chatArea.classList.remove('collapsed');
+            showMatchCelebration();
 
             await createPeerConnection(data.initiator);
 
@@ -1268,7 +1508,6 @@
         socket.on('signal', async (data) => {
             if (!peerConnection) return;
             const signal = data.signal;
-
             try {
                 if (signal.type === 'offer') {
                     await peerConnection.setRemoteDescription(new RTCSessionDescription(signal));
@@ -1280,9 +1519,7 @@
                 } else if (signal.candidate) {
                     await peerConnection.addIceCandidate(new RTCIceCandidate(signal));
                 }
-            } catch (err) {
-                console.error('Signal error:', err);
-            }
+            } catch (err) { console.error('Signal error:', err); }
         });
 
         socket.on('partner_left', () => {
@@ -1291,33 +1528,20 @@
             cleanupAfterPartnerLeft();
         });
 
-        socket.on('report_confirmed', () => {
-            showToast('Report submitted. Thank you!', 3000, 'success');
-        });
-
+        socket.on('report_confirmed', () => showToast('Report submitted. Thank you!', 3000, 'success'));
         socket.on('reported', () => {
-            // Fired if YOU were reported (rare)
             showToast('Session ended', 2000, 'error');
             cleanupAfterPartnerLeft();
         });
 
         function cleanupAfterPartnerLeft() {
-            if (dataChannel) {
-                try { dataChannel.close(); } catch(e) {}
-                dataChannel = null;
-            }
-            if (peerConnection) {
-                peerConnection.close();
-                peerConnection = null;
-            }
-
-            // Blur then clear remote video
+            if (dataChannel) { try { dataChannel.close(); } catch(e) {} dataChannel = null; }
+            if (peerConnection) { peerConnection.close(); peerConnection = null; }
             remoteVideo.classList.add('blurred');
             setTimeout(() => {
                 remoteVideo.srcObject = null;
                 remoteVideo.classList.remove('blurred');
             }, 300);
-
             isConnected = false;
             isSearching = false;
             currentRoom = null;
@@ -1327,6 +1551,7 @@
             reportBtn.disabled = true;
             enableChat(false);
             typingIndicator.classList.remove('active');
+            emojiPicker.classList.remove('show');
             showPlaceholder(true, 'Tap 📞 to find a new stranger');
             setStatus('Ready to chat');
         }
@@ -1351,18 +1576,9 @@
 
         reportConfirmBtn.onclick = () => {
             if (!selectedReportReason) return;
-
-            // Send report to server
-            socket.emit('report_user', {
-                room: currentRoom,
-                reason: selectedReportReason
-            });
-
-            // Close report modal, show thanks modal
+            socket.emit('report_user', { room: currentRoom, reason: selectedReportReason });
             reportModal.classList.add('hidden');
             reportThanksModal.classList.remove('hidden');
-
-            // Immediate local disconnect
             cleanupAfterPartnerLeft();
         };
 
@@ -1376,7 +1592,7 @@
             startSearching();
         };
 
-        // ===== Main actions =====
+        // ===== Main =====
         async function startSearching() {
             if (isSearching || isConnected) return;
             if (!localStream) {
@@ -1386,19 +1602,17 @@
             isSearching = true;
             startBtn.disabled = true;
             startBtn.innerHTML = '⏳';
-            setStatus('Searching for stranger...', 'searching');
+            setStatus('Searching...', 'searching');
             showPlaceholder(true, 'Looking for someone...');
-            socket.emit('find_partner');
+            socket.emit('find_partner', { tag: selectedTag });
         }
 
         function endCall() {
-            if (currentRoom) {
-                socket.emit('leave_room', { room: currentRoom });
-            }
+            if (currentRoom) socket.emit('leave_room', { room: currentRoom });
             cleanupAfterPartnerLeft();
         }
 
-        // ===== Self video drag =====
+        // ===== Drag =====
         (function makeDraggable() {
             let isDragging = false;
             let startX, startY, initialX, initialY;
@@ -1409,20 +1623,16 @@
             function startDrag(e) {
                 isDragging = true;
                 selfVideoWrapper.classList.add('dragging');
-
                 const touch = e.touches ? e.touches[0] : e;
                 startX = touch.clientX;
                 startY = touch.clientY;
-
                 const rect = selfVideoWrapper.getBoundingClientRect();
                 initialX = rect.left;
                 initialY = rect.top;
-
                 selfVideoWrapper.style.position = 'fixed';
                 selfVideoWrapper.style.left = initialX + 'px';
                 selfVideoWrapper.style.top = initialY + 'px';
                 selfVideoWrapper.style.right = 'auto';
-
                 document.addEventListener('mousemove', onDrag);
                 document.addEventListener('touchmove', onDrag, { passive: false });
                 document.addEventListener('mouseup', stopDrag);
@@ -1432,19 +1642,15 @@
             function onDrag(e) {
                 if (!isDragging) return;
                 e.preventDefault();
-
                 const touch = e.touches ? e.touches[0] : e;
                 const dx = touch.clientX - startX;
                 const dy = touch.clientY - startY;
-
                 let newX = initialX + dx;
                 let newY = initialY + dy;
-
                 const w = selfVideoWrapper.offsetWidth;
                 const h = selfVideoWrapper.offsetHeight;
                 newX = Math.max(8, Math.min(window.innerWidth - w - 8, newX));
                 newY = Math.max(8, Math.min(window.innerHeight - h - 8, newY));
-
                 selfVideoWrapper.style.left = newX + 'px';
                 selfVideoWrapper.style.top = newY + 'px';
             }
@@ -1459,14 +1665,26 @@
             }
         })();
 
-        // ===== Event listeners =====
+        // ===== Event Listeners =====
         requestPermissionBtn.onclick = requestPermissions;
         startBtn.onclick = startSearching;
         endBtn.onclick = endCall;
         toggleMicBtn.onclick = toggleMicrophone;
         toggleCamBtn.onclick = toggleCamera;
+        switchCamBtn.onclick = switchCamera;
         chatToggleBtn.onclick = toggleChat;
         chatSendBtn.onclick = sendChatMessage;
+        emojiBtn.onclick = (e) => {
+            e.stopPropagation();
+            emojiPicker.classList.toggle('show');
+        };
+
+        document.addEventListener('click', (e) => {
+            if (!emojiPicker.contains(e.target) && e.target !== emojiBtn) {
+                emojiPicker.classList.remove('show');
+            }
+        });
+
         chatInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') sendChatMessage();
         });
@@ -1484,14 +1702,12 @@
             requestPermissionBtn.textContent = '❌ Browser not supported';
         }
 
-        addSystemMessage('👋 Welcome! Chat will appear here when connected.');
+        addSystemMessage('👋 Welcome! Pick a tag and tap 📞');
 
-        // ===== Initialize =====
+        // ===== Init =====
         (async function init() {
-            // Age gate first
             checkAgeGate();
-
-            // Then load TURN servers
+            initEmojiPicker();
             setStatus('Loading TURN servers...');
             rtcConfig = await buildRtcConfig();
             console.log('RTC config ready:', rtcConfig);
