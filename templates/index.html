@@ -2,163 +2,761 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover, maximum-scale=1.0">
     <meta name="description" content="Random Video Chat - Connect with strangers worldwide">
+    <meta name="theme-color" content="#000000">
     <title>Random Video Chat</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); height: 100vh; overflow: hidden; position: fixed; width: 100%; }
-        .container { height: 100vh; display: flex; flex-direction: column; }
-
-        /* Main area: videos + chat side by side */
-        .main-area { flex: 1; display: flex; flex-direction: row; overflow: hidden; }
-
-        /* Videos */
-        .videos-container { flex: 2; display: flex; flex-direction: column; padding: 10px; gap: 10px; min-width: 0; }
-        .video-wrapper { flex: 1; background: #000; border-radius: 12px; overflow: hidden; position: relative; box-shadow: 0 5px 20px rgba(0,0,0,0.3); min-height: 0; }
-        .video-wrapper video { width: 100%; height: 100%; object-fit: cover; }
-        .video-label { position: absolute; bottom: 10px; left: 10px; background: rgba(0,0,0,0.6); color: white; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 500; backdrop-filter: blur(5px); z-index: 10; }
-
-        /* Chat panel */
-        .chat-panel { flex: 1; display: flex; flex-direction: column; background: rgba(0,0,0,0.85); border-radius: 12px; margin: 10px 10px 10px 0; overflow: hidden; min-width: 0; max-width: 400px; backdrop-filter: blur(10px); }
-        .chat-header { padding: 12px 16px; background: rgba(255,255,255,0.08); color: white; font-weight: 600; font-size: 14px; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; gap: 8px; }
-        .chat-header .dot { width: 8px; height: 8px; border-radius: 50%; background: #6b7280; }
-        .chat-header .dot.online { background: #10b981; box-shadow: 0 0 8px #10b981; }
-
-        .chat-messages { flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
-        .chat-messages::-webkit-scrollbar { width: 6px; }
-        .chat-messages::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 3px; }
-
-        .message { max-width: 85%; padding: 8px 12px; border-radius: 12px; font-size: 13px; line-height: 1.4; word-wrap: break-word; animation: fadeIn 0.2s ease; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-
-        .message.me { align-self: flex-end; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-bottom-right-radius: 3px; }
-        .message.them { align-self: flex-start; background: rgba(255,255,255,0.12); color: white; border-bottom-left-radius: 3px; }
-        .message.system { align-self: center; background: rgba(255,255,255,0.06); color: #9ca3af; font-size: 11px; font-style: italic; padding: 4px 12px; border-radius: 20px; max-width: 100%; text-align: center; }
-
-        .chat-input-area { display: flex; padding: 10px; gap: 8px; background: rgba(255,255,255,0.05); border-top: 1px solid rgba(255,255,255,0.1); }
-        .chat-input-area input { flex: 1; padding: 10px 14px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.08); color: white; font-size: 13px; outline: none; font-family: inherit; min-width: 0; }
-        .chat-input-area input:focus { border-color: #667eea; background: rgba(255,255,255,0.12); }
-        .chat-input-area input:disabled { opacity: 0.5; cursor: not-allowed; }
-        .chat-input-area input::placeholder { color: rgba(255,255,255,0.4); }
-        .chat-input-area button { padding: 10px 16px; border-radius: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; font-weight: 600; font-size: 13px; border: none; cursor: pointer; transition: transform 0.15s; }
-        .chat-input-area button:active { transform: scale(0.95); }
-        .chat-input-area button:disabled { opacity: 0.4; cursor: not-allowed; }
-
-        /* Controls */
-        .controls { background: rgba(0,0,0,0.9); padding: 15px; display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; backdrop-filter: blur(10px); border-top: 1px solid rgba(255,255,255,0.1); }
-        button { padding: 12px 20px; font-size: 14px; font-weight: 600; border: none; border-radius: 50px; cursor: pointer; transition: all 0.2s ease; display: inline-flex; align-items: center; gap: 8px; font-family: inherit; touch-action: manipulation; }
-        .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
-        .btn-primary:active { transform: scale(0.97); }
-        .btn-danger { background: #dc2626; color: white; }
-        .btn-danger:active { transform: scale(0.97); }
-        .btn-secondary { background: #374151; color: white; }
-        .btn-secondary:active { transform: scale(0.97); }
-        button:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
-
-        /* Status bar */
-        .status { position: fixed; top: 10px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.9); color: white; padding: 10px 20px; border-radius: 50px; font-size: 12px; font-weight: 500; z-index: 1000; text-align: center; white-space: nowrap; max-width: 90%; overflow: hidden; text-overflow: ellipsis; }
-        @media (max-width: 768px) { .status { font-size: 11px; padding: 8px 16px; white-space: normal; max-width: 85%; line-height: 1.4; top: 5px; } }
-        .waiting-animation { display: inline-block; width: 16px; height: 16px; border: 2px solid #fff; border-top-color: transparent; border-radius: 50%; animation: spin 0.8s linear infinite; margin-left: 8px; vertical-align: middle; }
-        @keyframes spin { to { transform: rotate(360deg); } }
-
-        /* Modal */
-        .modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.95); display: flex; align-items: center; justify-content: center; z-index: 2000; padding: 20px; }
-        .modal-content { background: white; padding: 30px 25px; border-radius: 20px; text-align: center; max-width: 400px; width: 100%; animation: slideIn 0.3s ease; }
-        @keyframes slideIn { from { transform: translateY(-30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-        .modal-content h2 { margin-bottom: 15px; color: #333; font-size: 22px; }
-        .modal-content p { margin-bottom: 20px; color: #666; line-height: 1.5; font-size: 14px; }
-        .modal-content .feature-list { text-align: left; margin: 20px 0; padding-left: 20px; }
-        .modal-content .feature-list li { margin: 8px 0; color: #555; font-size: 13px; }
-
-        .control-buttons { display: flex; gap: 12px; }
-        .icon-btn { background: #374151; padding: 12px; border-radius: 50%; width: 48px; height: 48px; display: inline-flex; align-items: center; justify-content: center; font-size: 22px; touch-action: manipulation; }
-        .icon-btn:active { transform: scale(0.95); }
-        .icon-btn.off { background: #dc2626; }
-
-        /* Toasts */
-        .toast { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.85); color: white; padding: 8px 16px; border-radius: 8px; font-size: 12px; z-index: 1000; pointer-events: none; backdrop-filter: blur(5px); }
-
-        /* ===== Responsive ===== */
-        /* Desktop: side-by-side videos and chat */
-        @media (min-width: 900px) {
-            .videos-container { flex-direction: row; padding: 20px; gap: 20px; }
-            .controls { padding: 20px; gap: 20px; }
-            button { padding: 12px 30px; font-size: 16px; }
-            .icon-btn { width: 45px; height: 45px; font-size: 20px; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
         }
 
-        /* Tablet / portrait: videos stacked, chat below */
-        @media (max-width: 899px) {
-            .main-area { flex-direction: column; }
-            .videos-container { flex: 2; padding: 8px; gap: 8px; }
-            .chat-panel { flex: 1; margin: 0 8px 8px 8px; max-width: none; min-height: 180px; }
+        html, body {
+            height: 100%;
+            overflow: hidden;
+            position: fixed;
+            width: 100%;
+            overscroll-behavior: none;
         }
 
-        /* Small phones */
-        @media (max-width: 480px) {
-            .controls { padding: 10px; gap: 8px; }
-            button { padding: 10px 16px; font-size: 13px; }
-            .icon-btn { width: 44px; height: 44px; font-size: 20px; }
-            .chat-header { padding: 10px 12px; font-size: 13px; }
-            .chat-input-area { padding: 8px; }
-            .chat-input-area input { padding: 8px 12px; font-size: 12px; }
-            .chat-input-area button { padding: 8px 14px; font-size: 12px; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: #000;
+            color: white;
+            user-select: none;
         }
 
-        /* Landscape phone */
-        @media (orientation: landscape) and (max-height: 500px) {
-            .main-area { flex-direction: row; }
-            .videos-container { flex-direction: row; padding: 6px; gap: 6px; }
-            .chat-panel { max-width: 280px; margin: 6px 6px 6px 0; min-height: 0; }
-            .controls { padding: 6px; }
-            button { padding: 8px 14px; font-size: 12px; }
-            .icon-btn { width: 38px; height: 38px; font-size: 18px; }
-            .status { font-size: 10px; padding: 5px 12px; top: 5px; }
+        /* ===== Fullscreen Video Stage ===== */
+        .video-stage {
+            position: fixed;
+            inset: 0;
+            background: #000;
+            overflow: hidden;
+        }
+
+        /* Stranger's video - fullscreen */
+        #remoteVideo {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            background: #111;
+        }
+
+        /* Placeholder when no video */
+        .video-placeholder {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            gap: 20px;
+            z-index: 1;
+        }
+
+        .video-placeholder.hidden {
+            display: none;
+        }
+
+        .video-placeholder .avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 60px;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.05); opacity: 0.9; }
+        }
+
+        .video-placeholder .placeholder-text {
+            font-size: 16px;
+            color: rgba(255,255,255,0.7);
+            text-align: center;
+            padding: 0 20px;
+            max-width: 300px;
+        }
+
+        /* Self video - floating PiP */
+        .self-video-wrapper {
+            position: absolute;
+            top: 80px;
+            right: 12px;
+            width: 110px;
+            height: 160px;
+            border-radius: 14px;
+            overflow: hidden;
+            background: #000;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.6);
+            border: 2px solid rgba(255,255,255,0.15);
+            z-index: 20;
+            transition: transform 0.2s;
+            cursor: grab;
+        }
+
+        .self-video-wrapper:active {
+            cursor: grabbing;
+        }
+
+        .self-video-wrapper.dragging {
+            transition: none;
+            box-shadow: 0 8px 30px rgba(102,126,234,0.6);
+            border-color: rgba(102,126,234,0.8);
+        }
+
+        #localVideo {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transform: scaleX(-1); /* Mirror self view */
+        }
+
+        .self-label {
+            position: absolute;
+            bottom: 4px;
+            left: 4px;
+            background: rgba(0,0,0,0.6);
+            color: white;
+            padding: 2px 6px;
+            border-radius: 8px;
+            font-size: 9px;
+            font-weight: 600;
+            backdrop-filter: blur(5px);
+        }
+
+        /* Self video hidden state */
+        .self-video-wrapper.hidden {
+            display: none;
+        }
+
+        /* ===== Top Status Bar ===== */
+        .top-bar {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            right: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 30;
+            gap: 10px;
+            pointer-events: none;
+        }
+
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(0,0,0,0.65);
+            color: white;
+            padding: 8px 14px;
+            border-radius: 50px;
+            font-size: 12px;
+            font-weight: 500;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            max-width: 70%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            pointer-events: auto;
+            transition: background 0.3s;
+        }
+
+        .status-pill.error {
+            background: rgba(220,38,38,0.9);
+        }
+
+        .status-pill.success {
+            background: rgba(16,185,129,0.85);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #fbbf24;
+            flex-shrink: 0;
+        }
+
+        .status-dot.connected {
+            background: #10b981;
+            box-shadow: 0 0 8px #10b981;
+        }
+
+        .status-dot.searching {
+            background: #fbbf24;
+            animation: blink 1s ease-in-out infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        /* ===== Chat Overlay ===== */
+        .chat-overlay {
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            max-height: 70%;
+            background: rgba(0,0,0,0.92);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-top-left-radius: 20px;
+            border-top-right-radius: 20px;
+            transform: translateY(100%);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 50;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .chat-overlay.open {
+            transform: translateY(0);
+        }
+
+        .chat-handle {
+            width: 40px;
+            height: 4px;
+            background: rgba(255,255,255,0.3);
+            border-radius: 2px;
+            margin: 8px auto;
+            flex-shrink: 0;
+        }
+
+        .chat-header {
+            padding: 8px 20px 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            flex-shrink: 0;
+        }
+
+        .chat-header-title {
+            font-size: 14px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .chat-header-title .online-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #6b7280;
+            transition: background 0.3s;
+        }
+
+        .chat-header-title .online-dot.online {
+            background: #10b981;
+            box-shadow: 0 0 8px #10b981;
+        }
+
+        .chat-close {
+            background: transparent;
+            border: none;
+            color: rgba(255,255,255,0.6);
+            font-size: 22px;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 8px;
+            line-height: 1;
+        }
+
+        .chat-close:active {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .chat-messages::-webkit-scrollbar { width: 4px; }
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.2);
+            border-radius: 2px;
+        }
+
+        .message {
+            max-width: 80%;
+            padding: 8px 12px;
+            border-radius: 14px;
+            font-size: 14px;
+            line-height: 1.4;
+            word-wrap: break-word;
+            animation: msgIn 0.2s ease;
+        }
+
+        @keyframes msgIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message.me {
+            align-self: flex-end;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .message.them {
+            align-self: flex-start;
+            background: rgba(255,255,255,0.15);
+            color: white;
+            border-bottom-left-radius: 4px;
+        }
+
+        .message.system {
+            align-self: center;
+            background: rgba(255,255,255,0.08);
+            color: #9ca3af;
+            font-size: 11px;
+            font-style: italic;
+            padding: 4px 12px;
+            border-radius: 20px;
+            text-align: center;
+        }
+
+        .typing-indicator {
+            align-self: flex-start;
+            background: rgba(255,255,255,0.15);
+            color: rgba(255,255,255,0.7);
+            padding: 10px 14px;
+            border-radius: 14px;
+            border-bottom-left-radius: 4px;
+            font-size: 12px;
+            display: none;
+        }
+
+        .typing-indicator.active {
+            display: block;
+        }
+
+        .typing-dots span {
+            display: inline-block;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.7);
+            animation: typing 1.4s infinite;
+            margin: 0 1px;
+        }
+
+        .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes typing {
+            0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+            30% { transform: translateY(-4px); opacity: 1; }
+        }
+
+        .chat-input-row {
+            display: flex;
+            padding: 10px 12px;
+            gap: 8px;
+            background: rgba(255,255,255,0.05);
+            border-top: 1px solid rgba(255,255,255,0.1);
+            flex-shrink: 0;
+            padding-bottom: calc(10px + env(safe-area-inset-bottom));
+        }
+
+        .chat-input-row input {
+            flex: 1;
+            padding: 12px 16px;
+            border-radius: 24px;
+            border: 1px solid rgba(255,255,255,0.15);
+            background: rgba(255,255,255,0.1);
+            color: white;
+            font-size: 15px;
+            outline: none;
+            font-family: inherit;
+            min-width: 0;
+        }
+
+        .chat-input-row input:focus {
+            border-color: #667eea;
+            background: rgba(255,255,255,0.15);
+        }
+
+        .chat-input-row input::placeholder {
+            color: rgba(255,255,255,0.4);
+        }
+
+        .chat-input-row input:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .chat-send-btn {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: transform 0.15s;
+        }
+
+        .chat-send-btn:active {
+            transform: scale(0.9);
+        }
+
+        .chat-send-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        /* ===== Bottom Controls ===== */
+        .bottom-controls {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 16px 16px calc(16px + env(safe-area-inset-bottom));
+            background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.7) 60%, transparent 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            z-index: 25;
+            pointer-events: none;
+        }
+
+        .bottom-controls > * {
+            pointer-events: auto;
+        }
+
+        .circle-btn {
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.15);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: white;
+            font-size: 22px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s;
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .circle-btn:active {
+            transform: scale(0.92);
+            background: rgba(255,255,255,0.25);
+        }
+
+        .circle-btn.off {
+            background: rgba(220,38,38,0.85);
+            border-color: rgba(220,38,38,0.5);
+        }
+
+        .circle-btn.primary {
+            width: 68px;
+            height: 68px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            font-size: 26px;
+            box-shadow: 0 4px 20px rgba(102,126,234,0.5);
+        }
+
+        .circle-btn.primary:active {
+            box-shadow: 0 2px 10px rgba(102,126,234,0.7);
+        }
+
+        .circle-btn.danger {
+            background: rgba(220,38,38,0.9);
+            border: none;
+        }
+
+        .circle-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .circle-btn:disabled:active {
+            transform: none;
+        }
+
+        /* Notification badge on chat button */
+        .badge {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            min-width: 20px;
+            height: 20px;
+            border-radius: 10px;
+            background: #ef4444;
+            color: white;
+            font-size: 11px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 5px;
+            border: 2px solid #000;
+            opacity: 0;
+            transform: scale(0);
+            transition: all 0.2s;
+        }
+
+        .badge.show {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        /* ===== Welcome Modal ===== */
+        .modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.95);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            padding: 20px;
+        }
+
+        .modal.hidden {
+            display: none;
+        }
+
+        .modal-content {
+            background: white;
+            color: #333;
+            padding: 32px 24px;
+            border-radius: 24px;
+            text-align: center;
+            max-width: 400px;
+            width: 100%;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateY(-30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .modal-content h2 {
+            margin-bottom: 12px;
+            font-size: 22px;
+        }
+
+        .modal-content > p {
+            margin-bottom: 20px;
+            color: #666;
+            line-height: 1.5;
+            font-size: 14px;
+        }
+
+        .feature-list {
+            text-align: left;
+            margin: 20px 0;
+            padding-left: 20px;
+            list-style: none;
+        }
+
+        .feature-list li {
+            margin: 10px 0;
+            color: #555;
+            font-size: 14px;
+        }
+
+        .btn-modal {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 14px 32px;
+            border-radius: 50px;
+            border: none;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: inherit;
+            width: 100%;
+            margin-top: 8px;
+        }
+
+        .btn-modal:active {
+            transform: scale(0.97);
+        }
+
+        /* ===== Toast ===== */
+        .toast {
+            position: fixed;
+            bottom: 140px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.85);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 12px;
+            font-size: 13px;
+            z-index: 3000;
+            pointer-events: none;
+            backdrop-filter: blur(10px);
+            white-space: nowrap;
+            animation: toastIn 0.3s ease;
+        }
+
+        @keyframes toastIn {
+            from { opacity: 0; transform: translateX(-50%) translateY(10px); }
+            to { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+
+        /* ===== Tablet & Desktop Adjustments ===== */
+        @media (min-width: 768px) {
+            .self-video-wrapper {
+                width: 160px;
+                height: 220px;
+                top: 100px;
+                right: 20px;
+            }
+
+            .chat-overlay {
+                max-height: 60%;
+                left: auto;
+                right: 20px;
+                bottom: 120px;
+                width: 380px;
+                border-radius: 20px;
+                transform: translateY(20px);
+                opacity: 0;
+                pointer-events: none;
+            }
+
+            .chat-overlay.open {
+                transform: translateY(0);
+                opacity: 1;
+                pointer-events: auto;
+            }
+
+            .chat-overlay::before {
+                display: none;
+            }
+        }
+
+        /* Very small phones */
+        @media (max-width: 360px) {
+            .self-video-wrapper {
+                width: 90px;
+                height: 130px;
+            }
+
+            .circle-btn {
+                width: 46px;
+                height: 46px;
+                font-size: 20px;
+            }
+
+            .circle-btn.primary {
+                width: 60px;
+                height: 60px;
+                font-size: 24px;
+            }
+
+            .status-pill {
+                font-size: 11px;
+                padding: 6px 10px;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="status" id="status">🌍 Connecting to server...</div>
+    <!-- Video Stage -->
+    <div class="video-stage">
+        <!-- Stranger's fullscreen video -->
+        <video id="remoteVideo" autoplay playsinline></video>
 
-        <div class="main-area">
-            <div class="videos-container">
-                <div class="video-wrapper">
-                    <video id="localVideo" autoplay muted playsinline></video>
-                    <div class="video-label">You</div>
-                </div>
-                <div class="video-wrapper">
-                    <video id="remoteVideo" autoplay playsinline></video>
-                    <div class="video-label">Stranger</div>
-                </div>
-            </div>
-
-            <div class="chat-panel">
-                <div class="chat-header">
-                    <span class="dot" id="chatStatusDot"></span>
-                    <span>Text Chat</span>
-                </div>
-                <div class="chat-messages" id="chatMessages"></div>
-                <div class="chat-input-area">
-                    <input type="text" id="chatInput" placeholder="Type a message..." maxlength="500" disabled autocomplete="off">
-                    <button id="chatSendBtn" disabled>Send</button>
-                </div>
-            </div>
+        <!-- Placeholder shown before connection -->
+        <div class="video-placeholder" id="videoPlaceholder">
+            <div class="avatar">👤</div>
+            <div class="placeholder-text" id="placeholderText">Tap "Start" to meet a stranger</div>
         </div>
 
-        <div class="controls">
-            <div class="control-buttons">
-                <button id="toggleMic" class="icon-btn" title="Toggle Microphone">🎤</button>
-                <button id="toggleCam" class="icon-btn" title="Toggle Camera">📹</button>
-            </div>
-            <button id="startBtn" class="btn-primary" disabled>🎥 Start Chatting</button>
-            <button id="nextBtn" class="btn-secondary" disabled>⏭️ Next</button>
-            <button id="endBtn" class="btn-danger" disabled>❌ End Chat</button>
+        <!-- Self video PiP -->
+        <div class="self-video-wrapper" id="selfVideoWrapper">
+            <video id="localVideo" autoplay muted playsinline></video>
+            <div class="self-label">You</div>
         </div>
     </div>
 
-    <div id="welcomeModal" class="modal">
+    <!-- Top Status -->
+    <div class="top-bar">
+        <div class="status-pill" id="statusPill">
+            <span class="status-dot" id="statusDot"></span>
+            <span id="statusText">Ready to start</span>
+        </div>
+    </div>
+
+    <!-- Chat Overlay (slides up from bottom) -->
+    <div class="chat-overlay" id="chatOverlay">
+        <div class="chat-handle"></div>
+        <div class="chat-header">
+            <div class="chat-header-title">
+                <span class="online-dot" id="chatOnlineDot"></span>
+                <span>Chat with Stranger</span>
+            </div>
+            <button class="chat-close" id="chatCloseBtn">✕</button>
+        </div>
+        <div class="chat-messages" id="chatMessages"></div>
+        <div class="typing-indicator" id="typingIndicator">
+            Stranger is typing<span class="typing-dots"><span></span><span></span><span></span></span>
+        </div>
+        <div class="chat-input-row">
+            <input type="text" id="chatInput" placeholder="Type a message..." maxlength="500" autocomplete="off" disabled>
+            <button class="chat-send-btn" id="chatSendBtn" disabled>➤</button>
+        </div>
+    </div>
+
+    <!-- Bottom Controls -->
+    <div class="bottom-controls">
+        <button class="circle-btn" id="toggleMic" title="Toggle Microphone">🎤</button>
+        <button class="circle-btn" id="toggleCam" title="Toggle Camera">📹</button>
+        <button class="circle-btn primary" id="startBtn" title="Start Chatting">📞</button>
+        <button class="circle-btn" id="chatToggleBtn" title="Open Chat">
+            💬
+            <span class="badge" id="chatBadge">0</span>
+        </button>
+        <button class="circle-btn" id="nextBtn" disabled title="Next Stranger">⏭️</button>
+        <button class="circle-btn danger" id="endBtn" disabled title="End Chat">✕</button>
+    </div>
+
+    <!-- Welcome Modal -->
+    <div class="modal" id="welcomeModal">
         <div class="modal-content">
             <h2>🎥 Random Video Chat</h2>
             <p>Connect with strangers from around the world instantly!</p>
@@ -169,32 +767,44 @@
                 <li>✅ Works on mobile & desktop</li>
                 <li>✅ Peer-to-peer encrypted</li>
             </ul>
-            <p style="font-size: 13px; color: #888;">Please allow camera and microphone access</p>
-            <button id="requestPermissionBtn" class="btn-primary">🎥 Allow Access & Start</button>
+            <p style="font-size: 13px; color: #888; margin-top: 12px;">Please allow camera and microphone access</p>
+            <button class="btn-modal" id="requestPermissionBtn">🎥 Allow Access & Start</button>
         </div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.min.js"></script>
     <script>
-        const socket = io();
-
-        // DOM
+        // ===== DOM =====
         const localVideo = document.getElementById('localVideo');
         const remoteVideo = document.getElementById('remoteVideo');
+        const videoPlaceholder = document.getElementById('videoPlaceholder');
+        const placeholderText = document.getElementById('placeholderText');
+        const selfVideoWrapper = document.getElementById('selfVideoWrapper');
+
+        const statusPill = document.getElementById('statusPill');
+        const statusDot = document.getElementById('statusDot');
+        const statusText = document.getElementById('statusText');
+
         const startBtn = document.getElementById('startBtn');
         const nextBtn = document.getElementById('nextBtn');
         const endBtn = document.getElementById('endBtn');
         const toggleMicBtn = document.getElementById('toggleMic');
         const toggleCamBtn = document.getElementById('toggleCam');
-        const statusDiv = document.getElementById('status');
-        const welcomeModal = document.getElementById('welcomeModal');
-        const requestPermissionBtn = document.getElementById('requestPermissionBtn');
+        const chatToggleBtn = document.getElementById('chatToggleBtn');
+        const chatBadge = document.getElementById('chatBadge');
+        const chatOverlay = document.getElementById('chatOverlay');
+        const chatCloseBtn = document.getElementById('chatCloseBtn');
         const chatMessages = document.getElementById('chatMessages');
         const chatInput = document.getElementById('chatInput');
         const chatSendBtn = document.getElementById('chatSendBtn');
-        const chatStatusDot = document.getElementById('chatStatusDot');
+        const chatOnlineDot = document.getElementById('chatOnlineDot');
+        const typingIndicator = document.getElementById('typingIndicator');
 
-        // State
+        const welcomeModal = document.getElementById('welcomeModal');
+        const requestPermissionBtn = document.getElementById('requestPermissionBtn');
+
+        // ===== State =====
+        let socket = io();
         let localStream = null;
         let peerConnection = null;
         let dataChannel = null;
@@ -203,6 +813,9 @@
         let isSearching = false;
         let micEnabled = true;
         let camEnabled = true;
+        let unreadCount = 0;
+        let typingTimeout = null;
+        let lastTypingSent = 0;
 
         const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
@@ -215,6 +828,7 @@
             iceCandidatePoolSize: 10
         };
 
+        // ===== Helpers =====
         function showToast(msg, duration = 2000) {
             const t = document.createElement('div');
             t.className = 'toast';
@@ -223,28 +837,75 @@
             setTimeout(() => t.remove(), duration);
         }
 
-        function updateStatus(msg, isError = false) {
-            statusDiv.innerHTML = msg;
-            statusDiv.style.background = isError ? 'rgba(220,38,38,0.95)' : 'rgba(0,0,0,0.95)';
+        function setStatus(text, type = 'idle') {
+            statusText.textContent = text;
+            statusPill.classList.remove('error', 'success');
+            statusDot.classList.remove('connected', 'searching');
+
+            if (type === 'error') {
+                statusPill.classList.add('error');
+            } else if (type === 'success') {
+                statusPill.classList.add('success');
+                statusDot.classList.add('connected');
+            } else if (type === 'searching') {
+                statusDot.classList.add('searching');
+            }
         }
 
-        // ===== Chat Functions =====
+        function showPlaceholder(show, text) {
+            if (show) {
+                videoPlaceholder.classList.remove('hidden');
+                if (text) placeholderText.textContent = text;
+            } else {
+                videoPlaceholder.classList.add('hidden');
+            }
+        }
+
+        // ===== Chat =====
         function addMessage(text, type = 'them') {
             const div = document.createElement('div');
             div.className = 'message ' + type;
             div.textContent = text;
             chatMessages.appendChild(div);
             chatMessages.scrollTop = chatMessages.scrollHeight;
+
+            // Increment unread if chat is closed and message is from stranger
+            if (type === 'them' && !chatOverlay.classList.contains('open')) {
+                unreadCount++;
+                updateBadge();
+            }
         }
 
         function addSystemMessage(text) {
             addMessage(text, 'system');
         }
 
+        function updateBadge() {
+            if (unreadCount > 0) {
+                chatBadge.textContent = unreadCount > 9 ? '9+' : unreadCount;
+                chatBadge.classList.add('show');
+            } else {
+                chatBadge.classList.remove('show');
+            }
+        }
+
+        function openChat() {
+            chatOverlay.classList.add('open');
+            unreadCount = 0;
+            updateBadge();
+            if (dataChannel && dataChannel.readyState === 'open') {
+                setTimeout(() => chatInput.focus(), 300);
+            }
+        }
+
+        function closeChat() {
+            chatOverlay.classList.remove('open');
+        }
+
         function enableChat(enabled) {
             chatInput.disabled = !enabled;
             chatSendBtn.disabled = !enabled;
-            chatStatusDot.classList.toggle('online', enabled);
+            chatOnlineDot.classList.toggle('online', enabled);
         }
 
         function sendChatMessage() {
@@ -260,27 +921,44 @@
             chatInput.focus();
         }
 
-        chatSendBtn.onclick = sendChatMessage;
-        chatInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') sendChatMessage();
-        });
+        function sendTypingIndicator() {
+            if (!dataChannel || dataChannel.readyState !== 'open') return;
+            const now = Date.now();
+            if (now - lastTypingSent < 1500) return;
+            lastTypingSent = now;
+            dataChannel.send(JSON.stringify({ type: 'typing' }));
+        }
 
         // ===== DataChannel =====
         function setupDataChannel(channel) {
             dataChannel = channel;
+
             dataChannel.onopen = () => {
                 enableChat(true);
                 addSystemMessage('🟢 Connected to a stranger');
             };
+
             dataChannel.onclose = () => {
                 enableChat(false);
                 addSystemMessage('🔴 Stranger disconnected');
+                typingIndicator.classList.remove('active');
             };
+
             dataChannel.onmessage = (event) => {
                 try {
                     const msg = JSON.parse(event.data);
                     if (msg.type === 'chat') {
                         addMessage(msg.text, 'them');
+                    } else if (msg.type === 'typing') {
+                        typingIndicator.classList.add('active');
+                        clearTimeout(typingTimeout);
+                        typingTimeout = setTimeout(() => {
+                            typingIndicator.classList.remove('active');
+                        }, 2000);
+                        // Auto-scroll if chat is open
+                        if (chatOverlay.classList.contains('open')) {
+                            chatMessages.scrollTop = chatMessages.scrollHeight;
+                        }
                     }
                 } catch (e) {
                     console.error('Chat parse error:', e);
@@ -291,7 +969,7 @@
         // ===== Permissions =====
         async function requestPermissions() {
             try {
-                updateStatus('📷 Requesting camera/mic access...');
+                setStatus('Requesting camera/mic...', 'searching');
                 const constraints = {
                     video: {
                         width: { ideal: 1280 },
@@ -302,9 +980,10 @@
                 };
                 localStream = await navigator.mediaDevices.getUserMedia(constraints);
                 localVideo.srcObject = localStream;
-                welcomeModal.style.display = 'none';
-                updateStatus('✅ Ready! Tap "Start Chatting"');
+                welcomeModal.classList.add('hidden');
+                setStatus('Ready to chat', 'success');
                 startBtn.disabled = false;
+                showPlaceholder(true, 'Tap 📞 to start meeting strangers');
                 showToast('Camera and mic ready!');
                 return true;
             } catch (err) {
@@ -312,7 +991,7 @@
                 let msg = 'Camera/Mic access required. ';
                 if (err.name === 'NotAllowedError') msg += 'Please allow access in browser settings.';
                 else if (err.name === 'NotFoundError') msg += 'No camera/mic found.';
-                updateStatus(msg, true);
+                setStatus(msg, 'error');
                 showToast(msg, 5000);
                 return false;
             }
@@ -334,6 +1013,7 @@
             localStream.getVideoTracks().forEach(t => t.enabled = camEnabled);
             toggleCamBtn.classList.toggle('off', !camEnabled);
             toggleCamBtn.innerHTML = camEnabled ? '📹' : '🚫';
+            selfVideoWrapper.classList.toggle('hidden', !camEnabled);
             showToast(camEnabled ? 'Camera on' : 'Camera off');
         }
 
@@ -343,12 +1023,10 @@
 
             peerConnection = new RTCPeerConnection(rtcConfig);
 
-            // Add local media tracks
             localStream.getTracks().forEach(track => {
                 peerConnection.addTrack(track, localStream);
             });
 
-            // Setup data channel for text chat
             if (isInitiator) {
                 const channel = peerConnection.createDataChannel('chat', { ordered: true });
                 setupDataChannel(channel);
@@ -361,7 +1039,8 @@
             peerConnection.ontrack = (event) => {
                 if (event.streams && event.streams[0]) {
                     remoteVideo.srcObject = event.streams[0];
-                    updateStatus('🎥 Connected! You can now chat');
+                    showPlaceholder(false);
+                    setStatus('Connected', 'success');
                     showToast('Connected!');
                 }
             };
@@ -376,9 +1055,8 @@
                 const st = peerConnection.connectionState;
                 if (st === 'connected') {
                     isConnected = true;
-                    updateStatus('✅ Connected!');
                 } else if (st === 'disconnected' || st === 'failed') {
-                    updateStatus('❌ Partner disconnected', true);
+                    setStatus('Stranger disconnected', 'error');
                     endCall();
                 }
             };
@@ -388,25 +1066,31 @@
 
         // ===== Socket handlers =====
         socket.on('connect', () => {
-            console.log('Connected to signaling server');
-            if (!localStream) updateStatus('🌍 Connected. Allow camera access to start');
+            console.log('Socket connected');
+            if (!localStream) setStatus('Welcome — allow camera to start');
         });
 
         socket.on('waiting', () => {
-            updateStatus('🌍 Waiting for a stranger... <span class="waiting-animation"></span>');
+            setStatus('Searching for stranger...', 'searching');
+            showPlaceholder(true, 'Searching for someone...');
         });
 
         socket.on('matched', async (data) => {
             currentRoom = data.room;
             isSearching = false;
-            updateStatus('🎉 Match found! Connecting...');
+            setStatus('Match found! Connecting...', 'searching');
+            showPlaceholder(true, 'Connecting...');
             nextBtn.disabled = false;
             endBtn.disabled = false;
+            startBtn.disabled = true;
 
-            // Clear previous chat
+            // Reset chat
             chatMessages.innerHTML = '';
+            unreadCount = 0;
+            updateBadge();
             addSystemMessage('🔍 Matched! Say hi...');
             enableChat(false);
+            closeChat();
 
             await createPeerConnection(data.initiator);
 
@@ -438,23 +1122,33 @@
         });
 
         socket.on('partner_left', () => {
-            updateStatus('❌ Stranger left. Tap "Next" to find someone new', true);
+            setStatus('Stranger left', 'error');
             showToast('Stranger left the chat');
             cleanupAfterPartnerLeft();
         });
 
         function cleanupAfterPartnerLeft() {
-            if (dataChannel) { try { dataChannel.close(); } catch(e){} dataChannel = null; }
-            if (peerConnection) { peerConnection.close(); peerConnection = null; }
+            if (dataChannel) {
+                try { dataChannel.close(); } catch(e) {}
+                dataChannel = null;
+            }
+            if (peerConnection) {
+                peerConnection.close();
+                peerConnection = null;
+            }
             remoteVideo.srcObject = null;
             isConnected = false;
             isSearching = false;
             currentRoom = null;
             startBtn.disabled = false;
+            startBtn.innerHTML = '📞';
             nextBtn.disabled = true;
             endBtn.disabled = true;
             enableChat(false);
-            addSystemMessage('❌ Stranger disconnected');
+            closeChat();
+            typingIndicator.classList.remove('active');
+            showPlaceholder(true, 'Tap 📞 to find a new stranger');
+            setStatus('Ready to chat');
         }
 
         // ===== Main actions =====
@@ -466,7 +1160,9 @@
             }
             isSearching = true;
             startBtn.disabled = true;
-            updateStatus('🔍 Searching... <span class="waiting-animation"></span>');
+            startBtn.innerHTML = '⏳';
+            setStatus('Searching for stranger...', 'searching');
+            showPlaceholder(true, 'Looking for someone...');
             socket.emit('find_partner');
         }
 
@@ -475,13 +1171,71 @@
                 socket.emit('leave_room', { room: currentRoom });
             }
             cleanupAfterPartnerLeft();
-            updateStatus('Disconnected. Tap "Start Chatting"');
         }
 
         function findNext() {
             endCall();
-            setTimeout(() => startSearching(), 500);
+            setTimeout(() => startSearching(), 400);
         }
+
+        // ===== Self video drag =====
+        (function makeDraggable() {
+            let isDragging = false;
+            let startX, startY, initialX, initialY;
+
+            selfVideoWrapper.addEventListener('mousedown', startDrag);
+            selfVideoWrapper.addEventListener('touchstart', startDrag, { passive: true });
+
+            function startDrag(e) {
+                // Ignore clicks on the video itself (they don't do anything anyway)
+                isDragging = true;
+                selfVideoWrapper.classList.add('dragging');
+
+                const touch = e.touches ? e.touches[0] : e;
+                startX = touch.clientX;
+                startY = touch.clientY;
+
+                const rect = selfVideoWrapper.getBoundingClientRect();
+                initialX = rect.left;
+                initialY = rect.top;
+
+                document.addEventListener('mousemove', onDrag);
+                document.addEventListener('touchmove', onDrag, { passive: false });
+                document.addEventListener('mouseup', stopDrag);
+                document.addEventListener('touchend', stopDrag);
+            }
+
+            function onDrag(e) {
+                if (!isDragging) return;
+                e.preventDefault();
+
+                const touch = e.touches ? e.touches[0] : e;
+                const dx = touch.clientX - startX;
+                const dy = touch.clientY - startY;
+
+                let newX = initialX + dx;
+                let newY = initialY + dy;
+
+                // Keep inside viewport
+                const w = selfVideoWrapper.offsetWidth;
+                const h = selfVideoWrapper.offsetHeight;
+                newX = Math.max(8, Math.min(window.innerWidth - w - 8, newX));
+                newY = Math.max(60, Math.min(window.innerHeight - h - 8, newY));
+
+                selfVideoWrapper.style.left = newX + 'px';
+                selfVideoWrapper.style.top = newY + 'px';
+                selfVideoWrapper.style.right = 'auto';
+            }
+
+            function stopDrag() {
+                isDragging = false;
+                selfVideoWrapper.classList.remove('dragging');
+                document.removeEventListener('mousemove', onDrag);
+                document.removeEventListener('touchmove', onDrag);
+                document.removeEventListener('mouseup', stopDrag);
+                document.removeEventListener('touchend', stopDrag);
+            }
+        })();
 
         // ===== Event listeners =====
         requestPermissionBtn.onclick = requestPermissions;
@@ -490,6 +1244,31 @@
         endBtn.onclick = endCall;
         toggleMicBtn.onclick = toggleMicrophone;
         toggleCamBtn.onclick = toggleCamera;
+        chatToggleBtn.onclick = () => {
+            if (chatOverlay.classList.contains('open')) {
+                closeChat();
+            } else {
+                openChat();
+            }
+        };
+        chatCloseBtn.onclick = closeChat;
+        chatSendBtn.onclick = sendChatMessage;
+        chatInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') sendChatMessage();
+        });
+        chatInput.addEventListener('input', sendTypingIndicator);
+
+        // Close chat when clicking outside (on desktop)
+        document.addEventListener('click', (e) => {
+            if (
+                chatOverlay.classList.contains('open') &&
+                !chatOverlay.contains(e.target) &&
+                e.target !== chatToggleBtn &&
+                !chatToggleBtn.contains(e.target)
+            ) {
+                closeChat();
+            }
+        });
 
         // Cleanup on unload
         window.addEventListener('beforeunload', () => {
@@ -500,12 +1279,13 @@
 
         // Browser support check
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-            updateStatus('❌ Browser not supported. Use Chrome, Firefox, Edge, or Safari.', true);
+            setStatus('Browser not supported', 'error');
             requestPermissionBtn.disabled = true;
+            requestPermissionBtn.textContent = '❌ Browser not supported';
         }
 
-        // Welcome chat hint
-        addSystemMessage('👋 Welcome! Chat appears here when connected.');
+        // Initial welcome chat hint
+        addSystemMessage('👋 Welcome! Tap 💬 to open chat when connected.');
     </script>
 </body>
 </html>
