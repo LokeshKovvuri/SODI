@@ -35,7 +35,7 @@
             display: flex;
             flex-direction: column;
             height: 100vh;
-            height: 100dvh; /* Mobile dynamic viewport */
+            height: 100dvh;
             overflow: hidden;
         }
 
@@ -99,7 +99,7 @@
             50% { opacity: 0.3; }
         }
 
-        /* ===== Video Area (top, flexible) ===== */
+        /* ===== Video Area ===== */
         .video-area {
             flex: 1;
             position: relative;
@@ -108,7 +108,6 @@
             min-height: 0;
         }
 
-        /* Stranger video - fills the video area */
         #remoteVideo {
             position: absolute;
             inset: 0;
@@ -118,7 +117,6 @@
             background: #111;
         }
 
-        /* Placeholder */
         .video-placeholder {
             position: absolute;
             inset: 0;
@@ -160,7 +158,6 @@
             max-width: 300px;
         }
 
-        /* Self video PiP */
         .self-video-wrapper {
             position: absolute;
             top: 12px;
@@ -213,7 +210,7 @@
             backdrop-filter: blur(5px);
         }
 
-        /* ===== Chat Area (bottom of video, flexible) ===== */
+        /* ===== Chat Area ===== */
         .chat-area {
             flex-shrink: 0;
             display: flex;
@@ -297,6 +294,7 @@
             border-bottom-left-radius: 4px;
             font-size: 12px;
             display: none;
+            margin: 0 14px 6px;
         }
 
         .typing-indicator.active {
@@ -574,7 +572,7 @@
             to { opacity: 1; transform: translateX(-50%) translateY(0); }
         }
 
-        /* ===== Larger screens: two-column layout ===== */
+        /* ===== Desktop: two-column layout ===== */
         @media (min-width: 900px) {
             .app {
                 max-width: 1400px;
@@ -670,7 +668,6 @@
 
         <!-- Right column (desktop) / Bottom stack (mobile) -->
         <div class="right-column">
-            <!-- Top Status -->
             <div class="top-bar">
                 <div class="status-pill" id="statusPill">
                     <span class="status-dot" id="statusDot"></span>
@@ -678,7 +675,6 @@
                 </div>
             </div>
 
-            <!-- Chat Area -->
             <div class="chat-area" id="chatArea">
                 <div class="chat-messages" id="chatMessages"></div>
                 <div class="typing-indicator" id="typingIndicator">
@@ -690,7 +686,6 @@
                 </div>
             </div>
 
-            <!-- Bottom Controls -->
             <div class="bottom-controls">
                 <button class="circle-btn" id="toggleMic" title="Toggle Microphone">🎤</button>
                 <button class="circle-btn" id="toggleCam" title="Toggle Camera">📹</button>
@@ -705,7 +700,6 @@
         </div>
     </div>
 
-    <!-- Welcome Modal -->
     <div class="modal" id="welcomeModal">
         <div class="modal-content">
             <h2>🎥 Random Video Chat</h2>
@@ -724,6 +718,13 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.min.js"></script>
     <script>
+        // ============================================================
+        // 🔑 TURN SERVER CONFIGURATION — REPLACE THESE TWO VALUES
+        // ============================================================
+        const METERED_APP_NAME = "SODI";       // ⬅️ REPLACE THIS
+        const METERED_API_KEY  = "1be2e69bed1737aaef7968d0c1372914c246";   // ⬅️ REPLACE THIS
+        // ============================================================
+
         // ===== DOM =====
         const localVideo = document.getElementById('localVideo');
         const remoteVideo = document.getElementById('remoteVideo');
@@ -765,18 +766,43 @@
         let unreadCount = 0;
         let typingTimeout = null;
         let lastTypingSent = 0;
-        let chatManuallyCollapsed = false;
+        let rtcConfig = null;
 
         const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
-        const rtcConfig = {
-            iceServers: [
+        // ===== TURN: Fetch ICE servers from Metered =====
+        async function fetchIceServers() {
+            const cached = sessionStorage.getItem('iceServers');
+            if (cached) {
+                try { return JSON.parse(cached); } catch(e) {}
+            }
+
+            const fallback = [
                 { urls: 'stun:stun.l.google.com:19302' },
-                { urls: 'stun:stun1.l.google.com:19302' },
-                { urls: 'stun:stun2.l.google.com:19302' }
-            ],
-            iceCandidatePoolSize: 10
-        };
+                { urls: 'stun:stun1.l.google.com:19302' }
+            ];
+
+            try {
+                const url = `https://${METERED_APP_NAME}.metered.live/api/v1/turn/credentials?apiKey=${METERED_API_KEY}`;
+                const resp = await fetch(url);
+                if (!resp.ok) throw new Error(`TURN fetch failed: ${resp.status}`);
+                const servers = await resp.json();
+                console.log('✅ TURN servers loaded from Metered:', servers.length, 'entries');
+                sessionStorage.setItem('iceServers', JSON.stringify(servers));
+                return servers;
+            } catch (err) {
+                console.warn('⚠️ TURN fetch failed, using STUN only:', err);
+                return fallback;
+            }
+        }
+
+        async function buildRtcConfig() {
+            const iceServers = await fetchIceServers();
+            return {
+                iceServers: iceServers,
+                iceCandidatePoolSize: 10
+            };
+        }
 
         // ===== Helpers =====
         function showToast(msg, duration = 2000) {
@@ -818,7 +844,6 @@
             chatMessages.appendChild(div);
             chatMessages.scrollTop = chatMessages.scrollHeight;
 
-            // Unread badge when chat is collapsed
             if (type === 'them' && chatArea.classList.contains('collapsed')) {
                 unreadCount++;
                 updateBadge();
@@ -1032,9 +1057,7 @@
             addSystemMessage('🔍 Matched! Say hi...');
             enableChat(false);
 
-            // Reset chat visibility
             chatArea.classList.remove('collapsed');
-            chatManuallyCollapsed = false;
 
             await createPeerConnection(data.initiator);
 
@@ -1141,7 +1164,6 @@
                 initialX = rect.left;
                 initialY = rect.top;
 
-                // Detach from video area corner so absolute positioning works
                 selfVideoWrapper.style.position = 'fixed';
                 selfVideoWrapper.style.left = initialX + 'px';
                 selfVideoWrapper.style.top = initialY + 'px';
@@ -1197,14 +1219,12 @@
         });
         chatInput.addEventListener('input', sendTypingIndicator);
 
-        // Cleanup on unload
         window.addEventListener('beforeunload', () => {
             if (localStream) localStream.getTracks().forEach(t => t.stop());
             if (peerConnection) peerConnection.close();
             if (currentRoom) socket.emit('leave_room', { room: currentRoom });
         });
 
-        // Browser support check
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
             setStatus('Browser not supported', 'error');
             requestPermissionBtn.disabled = true;
@@ -1212,6 +1232,14 @@
         }
 
         addSystemMessage('👋 Welcome! Chat will appear here when connected.');
+
+        // ===== Initialize: Fetch TURN servers =====
+        (async function init() {
+            setStatus('Loading TURN servers...');
+            rtcConfig = await buildRtcConfig();
+            console.log('RTC config ready:', rtcConfig);
+            setStatus('Ready to start');
+        })();
     </script>
 </body>
 </html>
